@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ndesign — Pro Photo & Vector Studio</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@600;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb', // Primary Ndocs vibrant blue
+              700: '#1d4ed8',
+              800: '#1e40af',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Smooth UI transitions */
+    .smooth-ui {
+      transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Custom sleek scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Transparent checkerboard pattern for canvas */
+    .canvas-checkerboard {
+      background-color: #ffffff;
+      background-image: 
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+
+    /* Studio workspace background */
+    .workspace-bg {
+      background-color: #f1f5f9;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* Custom Range Input Styling (Blue Highlight) */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform 0.12s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #1d4ed8;
+    }
+
+    /* Tooltip on right of left-toolbar buttons */
+    .tool-tooltip {
+      position: relative;
+    }
+    .tool-tooltip::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%) scale(0.95);
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.14s ease;
+      z-index: 60;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+    }
+    .tool-tooltip:hover::after {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-800 font-sans antialiased h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOP STUDIO HEADER & MENU BAR (WHITE & BLUE PHOTOPEA + NDOCS AESTHETIC) -->
+  <!-- ========================================================================= -->
+  <header class="h-12 bg-white border-b border-slate-200 px-3 flex items-center justify-between shrink-0 z-40">
+    <!-- Left: Ndesign Brand, Editable Doc Name & Dropdown Menus -->
+    <div class="flex items-center gap-3">
+      <!-- Brand Logo Button (Clicks open Ndocs-style Template Hub) -->
+      <button onclick="toggleHomeModal(true)" title="Open Ndesign Templates Hub" class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 smooth-ui group">
+        <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white shadow-sm shadow-brand-500/30 group-hover:bg-brand-700 smooth-ui">
+          <i data-lucide="pen-tool" class="w-4 h-4"></i>
+        </div>
+        <span class="font-extrabold text-slate-900 tracking-tight text-base">Ndesign</span>
+      </button>
+
+      <div class="h-4 w-[1px] bg-slate-200"></div>
+
+      <!-- Editable Project Name -->
+      <div class="flex items-center gap-1.5">
+        <input id="projectTitleInput" type="text" value="Untitled design" 
+          class="text-xs font-semibold text-slate-700 bg-transparent hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none px-2 py-1 rounded-md w-36 smooth-ui"
+          title="Click to rename project">
+      </div>
+
+      <!-- Studio Top Menus -->
+      <nav class="hidden lg:flex items-center gap-0.5 text-xs font-medium text-slate-600">
+        <!-- Templates Hub Button -->
+        <button onclick="toggleHomeModal(true)" class="px-2.5 py-1.5 rounded-md hover:bg-brand-50 hover:text-brand-600 flex items-center gap-1.5 font-semibold text-brand-600 smooth-ui">
+          <i data-lucide="layout-template" class="w-3.5 h-3.5"></i> Templates
+        </button>
+
+        <!-- FILE MENU -->
+        <div class="relative group">
+          <button class="px-2.5 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1 smooth-ui">
+            File <i data-lucide="chevron-down" class="w-3 h-3 opacity-60"></i>
+          </button>
+          <div class="absolute left-0 top-full hidden group-hover:block w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <button onclick="toggleHomeModal(true)" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center justify-between">
+              <span class="flex items-center gap-2"><i data-lucide="file-plus-2" class="w-3.5 h-3.5 text-brand-600"></i> New / Templates...</span>
+            </button>
+            <label class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2 cursor-pointer">
+              <i data-lucide="image-plus" class="w-3.5 h-3.5 text-slate-500"></i> Place Image as Layer...
+              <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, true)">
+            </label>
+            <label class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2 cursor-pointer">
+              <i data-lucide="folder-open" class="w-3.5 h-3.5 text-slate-500"></i> Open Image Document...
+              <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, false)">
+            </label>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="saveProjectJSON()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="save" class="w-3.5 h-3.5 text-slate-500"></i> Save Backup (.ndesign)
+            </button>
+            <label class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2 cursor-pointer">
+              <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-slate-500"></i> Load Backup (.ndesign)
+              <input type="file" accept=".ndesign,.json" class="hidden" onchange="loadProjectJSON(event)">
+            </label>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="exportCanvas('png')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-brand-50 text-brand-600 font-medium flex items-center gap-2">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export PNG (High-Res)
+            </button>
+            <button onclick="exportCanvas('jpeg')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i> Export JPG
+            </button>
+            <button onclick="exportCanvas('webp')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i> Export WebP
+            </button>
+          </div>
+        </div>
+
+        <!-- EDIT MENU -->
+        <div class="relative group">
+          <button class="px-2.5 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1 smooth-ui">
+            Edit <i data-lucide="chevron-down" class="w-3 h-3 opacity-60"></i>
+          </button>
+          <div class="absolute left-0 top-full hidden group-hover:block w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <button onclick="undo()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center justify-between">
+              <span class="flex items-center gap-2"><i data-lucide="undo-2" class="w-3.5 h-3.5 text-slate-500"></i> Undo</span>
+              <kbd class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">Ctrl+Z</kbd>
+            </button>
+            <button onclick="redo()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center justify-between">
+              <span class="flex items-center gap-2"><i data-lucide="redo-2" class="w-3.5 h-3.5 text-slate-500"></i> Redo</span>
+              <kbd class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">Ctrl+Y</kbd>
+            </button>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="flipActiveLayer('h')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Flip Layer Horizontal
+            </button>
+            <button onclick="flipActiveLayer('v')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="flip-vertical" class="w-3.5 h-3.5 text-slate-500"></i> Flip Layer Vertical
+            </button>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="clearActiveLayer()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2">
+              <i data-lucide="eraser" class="w-3.5 h-3.5"></i> Clear Active Layer
+            </button>
+          </div>
+        </div>
+
+        <!-- LAYER MENU -->
+        <div class="relative group">
+          <button class="px-2.5 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1 smooth-ui">
+            Layer <i data-lucide="chevron-down" class="w-3 h-3 opacity-60"></i>
+          </button>
+          <div class="absolute left-0 top-full hidden group-hover:block w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <button onclick="addNewLayer()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-600"></i> New Empty Layer
+            </button>
+            <button onclick="duplicateActiveLayer()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i> Duplicate Layer
+            </button>
+            <button onclick="mergeLayerDown()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="git-merge" class="w-3.5 h-3.5 text-slate-500"></i> Merge Down
+            </button>
+            <button onclick="flattenAllLayers()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="combine" class="w-3.5 h-3.5 text-slate-500"></i> Flatten All Layers
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTER MENU (PHOTOSHOP PIXEL FILTERS) -->
+        <div class="relative group">
+          <button class="px-2.5 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1 smooth-ui">
+            Filter <i data-lucide="chevron-down" class="w-3 h-3 opacity-60"></i>
+          </button>
+          <div class="absolute left-0 top-full hidden group-hover:block w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Apply to Active Layer</div>
+            <button onclick="runPixelFilter('autoEnhance')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="wand-2" class="w-3.5 h-3.5 text-brand-600"></i> Auto Enhance Contrast
+            </button>
+            <button onclick="runPixelFilter('posterize')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500"></i> Vector Posterize Art
+            </button>
+            <button onclick="runPixelFilter('edgeSketch')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="pencil-ruler" class="w-3.5 h-3.5 text-slate-500"></i> Line Art / Edge Sketch
+            </button>
+            <button onclick="runPixelFilter('pixelate')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="grid" class="w-3.5 h-3.5 text-slate-500"></i> 8-Bit Pixelate
+            </button>
+            <button onclick="runPixelFilter('invert')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="contrast" class="w-3.5 h-3.5 text-slate-500"></i> Invert Negative
+            </button>
+            <button onclick="runPixelFilter('warmVintage')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="sun" class="w-3.5 h-3.5 text-slate-500"></i> Warm Retro Film
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW MENU -->
+        <div class="relative group">
+          <button class="px-2.5 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1 smooth-ui">
+            View <i data-lucide="chevron-down" class="w-3 h-3 opacity-60"></i>
+          </button>
+          <div class="absolute left-0 top-full hidden group-hover:block w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50">
+            <button onclick="toggleGrid()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center justify-between">
+              <span class="flex items-center gap-2"><i data-lucide="grid" class="w-3.5 h-3.5 text-slate-500"></i> Design Grid</span>
+              <span id="gridCheckmark" class="text-brand-600 font-bold"></span>
+            </button>
+            <button onclick="toggleRulers()" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center justify-between">
+              <span class="flex items-center gap-2"><i data-lucide="ruler" class="w-3.5 h-3.5 text-slate-500"></i> Pixel Rulers</span>
+              <span id="rulerCheckmark" class="text-brand-600 font-bold">✓</span>
+            </button>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="setZoom(1.0); resetPan();" class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2">
+              <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-slate-500"></i> Reset 100% View
+            </button>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Center: Zoom Pill & Canvas Size Indicator -->
+    <div class="hidden sm:flex items-center gap-2">
+      <span id="topDimBadge" class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+        1080 × 720 px
+      </span>
+      <div class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg text-xs font-medium text-slate-700">
+        <button onclick="setZoom(zoomLevel - 0.15)" class="hover:text-brand-600 p-0.5" title="Zoom Out"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+        <span id="zoomDisplay" class="min-w-[44px] text-center font-semibold text-[11px]">100%</span>
+        <button onclick="setZoom(zoomLevel + 0.15)" class="hover:text-brand-600 p-0.5" title="Zoom In"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+        <button onclick="fitCanvasToScreen()" class="text-[10px] text-brand-600 hover:underline pl-1 pr-0.5 font-semibold">Fit</button>
+      </div>
+    </div>
+
+    <!-- Right: Quick Actions & Blue Primary Highlight Button -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+        <button onclick="undo()" title="Undo (Ctrl+Z)" class="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md smooth-ui">
+          <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="redo()" title="Redo (Ctrl+Y)" class="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md smooth-ui">
+          <i data-lucide="redo-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <label class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg smooth-ui flex items-center gap-1.5 border border-slate-300 cursor-pointer shadow-2xs">
+        <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-500"></i> Import Photo
+        <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, true)">
+      </label>
+
+      <!-- NDOCS-STYLE VIBRANT BLUE HIGHLIGHT BUTTON -->
+      <button onclick="exportCanvas('png')" class="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold rounded-lg shadow-sm shadow-brand-500/25 smooth-ui flex items-center gap-1.5">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i> + Export Design
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 2. CONTEXTUAL TOOL OPTIONS BAR (CHANGES DYNAMICALLY PER ACTIVE TOOL)       -->
+  <!-- ========================================================================= -->
+  <div class="h-10 bg-slate-50/90 border-b border-slate-200 px-3 flex items-center gap-3 text-xs text-slate-600 overflow-x-auto shrink-0 z-30">
+    <!-- Active Tool Badge -->
+    <div class="flex items-center gap-1.5 pr-3 border-r border-slate-200 shrink-0">
+      <span class="w-2 h-2 rounded-full bg-brand-600"></span>
+      <span id="activeToolTitle" class="font-bold text-slate-800 tracking-tight">Brush Tool</span>
+    </div>
+
+    <!-- OPTION GROUP: MOVE & TRANSFORM (V) -->
+    <div id="opt-move" class="hidden items-center gap-3 shrink-0">
+      <span class="text-[11px] text-slate-400 font-medium">Quick Align Layer:</span>
+      <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
+        <button onclick="alignActiveLayer('left')" title="Align Left" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-start-vertical" class="w-3.5 h-3.5"></i></button>
+        <button onclick="alignActiveLayer('centerH')" title="Center Horizontally" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-center-vertical" class="w-3.5 h-3.5"></i></button>
+        <button onclick="alignActiveLayer('right')" title="Align Right" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-end-vertical" class="w-3.5 h-3.5"></i></button>
+        <div class="w-[1px] h-3.5 bg-slate-200 mx-0.5"></div>
+        <button onclick="alignActiveLayer('top')" title="Align Top" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-start-horizontal" class="w-3.5 h-3.5"></i></button>
+        <button onclick="alignActiveLayer('centerV')" title="Center Vertically" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-center-horizontal" class="w-3.5 h-3.5"></i></button>
+        <button onclick="alignActiveLayer('bottom')" title="Align Bottom" class="p-1 hover:bg-slate-100 rounded"><i data-lucide="align-end-horizontal" class="w-3.5 h-3.5"></i></button>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Scale:</span>
+        <input type="range" id="moveScaleSlider" min="10" max="250" value="100" oninput="updateActiveLayerTransform()" class="w-20">
+        <span id="moveScaleVal" class="text-[11px] font-semibold text-slate-700 min-w-[34px]">100%</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Rotate:</span>
+        <input type="range" id="moveRotateSlider" min="-180" max="180" value="0" oninput="updateActiveLayerTransform()" class="w-20">
+        <span id="moveRotateVal" class="text-[11px] font-semibold text-slate-700 min-w-[30px]">0°</span>
+      </div>
+      <button onclick="resetLayerTransform()" class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 rounded text-[11px] font-medium">Reset Transform</button>
+    </div>
+
+    <!-- OPTION GROUP: BRUSH & ERASER (B / E) -->
+    <div id="opt-brush" class="flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Size:</span>
+        <input type="range" id="brushSizeInput" min="1" max="120" value="10" class="w-24">
+        <span id="brushSizeLabel" class="text-[11px] font-semibold text-slate-700 min-w-[28px]">10px</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Opacity:</span>
+        <input type="range" id="brushOpacityInput" min="5" max="100" value="100" class="w-20">
+        <span id="brushOpacityLabel" class="text-[11px] font-semibold text-slate-700 min-w-[30px]">100%</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Style:</span>
+        <select id="brushStyleSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-medium text-slate-700">
+          <option value="smooth">Smooth Ink</option>
+          <option value="airbrush">Soft Airbrush</option>
+          <option value="neon">Neon Cyber Glow</option>
+          <option value="calligraphy">Chisel Calligraphy</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Symmetry:</span>
+        <select id="brushSymmetrySelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-medium text-brand-600">
+          <option value="none">Off</option>
+          <option value="mirrorH">Mirror Horizontal</option>
+          <option value="mandala4">4-Way Mandala</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- OPTION GROUP: MAGIC CUTOUT / WAND (W) -->
+    <div id="opt-magic" class="hidden items-center gap-3 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] text-slate-500">Color Tolerance:</span>
+        <input type="range" id="magicToleranceInput" min="2" max="120" value="32" class="w-28">
+        <span id="magicToleranceLabel" class="text-[11px] font-semibold text-brand-600">32</span>
+      </div>
+      <span class="text-[11px] text-slate-400 bg-white px-2.5 py-1 rounded border border-slate-200">
+        💡 Click any background color on canvas to erase matching pixels transparently
+      </span>
+    </div>
+
+    <!-- OPTION GROUP: LOCAL FX / BLUR / PIXELATE BRUSH (J) -->
+    <div id="opt-retouch" class="hidden items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Effect Mode:</span>
+        <select id="retouchModeSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-semibold text-brand-600">
+          <option value="pixelate">Pixelate Censor</option>
+          <option value="dodge">Dodge (Brighten Area)</option>
+          <option value="burn">Burn (Darken Area)</option>
+          <option value="desaturate">Sponge (Grayscale Area)</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Brush Size:</span>
+        <input type="range" id="retouchSizeInput" min="12" max="100" value="36" class="w-24">
+      </div>
+    </div>
+
+    <!-- OPTION GROUP: VECTOR PEN / PATH TOOL (P) [ILLUSTRATOR] -->
+    <div id="opt-pen" class="hidden items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Path Mode:</span>
+        <select id="penModeSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-medium">
+          <option value="both">Fill + Stroke Outline</option>
+          <option value="fill">Solid Fill Only</option>
+          <option value="stroke">Vector Outline Only</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Stroke Width:</span>
+        <input type="number" id="penStrokeWidth" value="3" min="1" max="40" class="w-14 bg-white border border-slate-200 rounded px-2 py-0.5 text-xs">
+      </div>
+      <button onclick="finishVectorPenPath(true)" class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-md text-xs font-semibold shadow-2xs">
+        ✓ Close &amp; Render Shape
+      </button>
+      <button onclick="finishVectorPenPath(false)" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-md text-xs font-medium">
+        Render Open Line
+      </button>
+      <button onclick="clearVectorPenPoints()" class="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs">Cancel</button>
+      <span id="penPointCount" class="text-[11px] text-slate-400">0 points placed (Click canvas to add nodes)</span>
+    </div>
+
+    <!-- OPTION GROUP: VECTOR SHAPES STUDIO (U) [ILLUSTRATOR] -->
+    <div id="opt-shape" class="hidden items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Shape:</span>
+        <select id="shapeTypeSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-semibold text-brand-600">
+          <option value="rect">Rectangle</option>
+          <option value="roundRect">Rounded Card</option>
+          <option value="circle">Circle / Ellipse</option>
+          <option value="star">5-Point Star</option>
+          <option value="polygon">Hexagon / Polygon</option>
+          <option value="triangle">Triangle</option>
+          <option value="heart">Vector Heart</option>
+          <option value="arrow">Right Arrow</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Fill Style:</span>
+        <select id="shapeFillStyle" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-medium">
+          <option value="solid">Solid Primary Color</option>
+          <option value="gradient">Linear Gradient (Primary → Secondary)</option>
+          <option value="none">No Fill (Outline Only)</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Stroke:</span>
+        <input type="number" id="shapeStrokeWidth" value="3" min="0" max="40" class="w-14 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-xs">
+        <span class="text-[10px] text-slate-400">px</span>
+      </div>
+      <label class="flex items-center gap-1 text-xs cursor-pointer">
+        <input type="checkbox" id="shapeNewLayerCheck" checked class="accent-brand-600 rounded">
+        <span class="text-[11px] text-slate-600">Create as New Vector Layer</span>
+      </label>
+    </div>
+
+    <!-- OPTION GROUP: GRADIENT TOOL (G) -->
+    <div id="opt-gradient" class="hidden items-center gap-3 shrink-0">
+      <select id="gradTypeSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-medium">
+        <option value="linear">Linear Gradient</option>
+        <option value="radial">Radial Gradient</option>
+      </select>
+      <span class="text-[11px] text-slate-400">Drag across canvas to blend Primary Color → Secondary Color</span>
+    </div>
+
+    <!-- OPTION GROUP: PRO TYPOGRAPHY (T) -->
+    <div id="opt-text" class="hidden items-center gap-2.5 shrink-0">
+      <input type="text" id="textContentInput" value="Ndesign Studio" placeholder="Type text..." 
+        class="bg-white border border-slate-300 rounded-md px-2.5 py-1 text-xs font-medium w-44 focus:outline-none focus:border-brand-600">
+      <select id="textFontSelect" class="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs">
+        <option value="Inter, sans-serif">Inter Sans</option>
+        <option value="'Montserrat', sans-serif">Montserrat Bold</option>
+        <option value="'Playfair Display', serif">Playfair Serif</option>
+        <option value="Impact, sans-serif">Impact Display</option>
+        <option value="'Courier New', monospace">Courier Mono</option>
+      </select>
+      <div class="flex items-center gap-1">
+        <span class="text-[11px] text-slate-500">Size:</span>
+        <input type="number" id="textSizeInput" value="56" min="10" max="300" class="w-16 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-xs">
+      </div>
+      <label class="flex items-center gap-1 text-xs cursor-pointer">
+        <input type="checkbox" id="textStrokeCheck" class="accent-brand-600">
+        <span class="text-[11px]">Outline</span>
+      </label>
+      <button onclick="addTextLayerDirectly()" class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-md text-xs font-semibold shadow-2xs">
+        + Add Text Layer
+      </button>
+    </div>
+
+    <!-- OPTION GROUP: CROP & RESIZE CANVAS (C) -->
+    <div id="opt-crop" class="hidden items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Width:</span>
+        <input type="number" id="cropWidthInput" value="1080" class="w-20 bg-white border border-slate-200 rounded px-2 py-0.5 text-xs">
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] text-slate-500">Height:</span>
+        <input type="number" id="cropHeightInput" value="720" class="w-20 bg-white border border-slate-200 rounded px-2 py-0.5 text-xs">
+      </div>
+      <button onclick="applyCanvasResize()" class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-md text-xs font-semibold">
+        Apply Canvas Size
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MAIN WORKSPACE AREA (LEFT PRO TOOLBOX + CENTER VIEWPORT + RIGHT DOCK)  -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- ================= LEFT PHOTOSHOP + ILLUSTRATOR TOOLBOX ================= -->
+    <aside class="w-14 bg-white border-r border-slate-200 flex flex-col items-center py-2.5 gap-1 shrink-0 z-30">
+      <!-- 1. Move & Transform (V) -->
+      <button onclick="setTool('move')" id="tool-move" data-tip="Move & Transform Layer (V)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="move" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 2. Canvas Resize / Crop (C) -->
+      <button onclick="setTool('crop')" id="tool-crop" data-tip="Canvas Size & Crop (C)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="crop" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 3. Magic Color Cutout / Background Eraser (W) -->
+      <button onclick="setTool('magic')" id="tool-magic" data-tip="Magic Color Cutout / BG Remover (W)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="wand-2" class="w-4 h-4"></i>
+      </button>
+
+      <div class="w-6 border-t border-slate-100 my-0.5"></div>
+
+      <!-- 4. Pro Brush (B) -->
+      <button onclick="setTool('brush')" id="tool-brush" data-tip="Pro Brush & Symmetry Paint (B)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center bg-brand-600 text-white shadow-sm shadow-brand-500/30 smooth-ui">
+        <i data-lucide="brush" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 5. Eraser (E) -->
+      <button onclick="setTool('eraser')" id="tool-eraser" data-tip="Eraser Tool (E)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="eraser" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 6. Retouch / Local Pixelate & Dodge Brush (J) -->
+      <button onclick="setTool('retouch')" id="tool-retouch" data-tip="Retouch / Pixelate / Dodge Brush (J)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+      </button>
+
+      <div class="w-6 border-t border-slate-100 my-0.5"></div>
+
+      <!-- 7. Vector Pen Path Tool (P) [Illustrator] -->
+      <button onclick="setTool('pen')" id="tool-pen" data-tip="Vector Pen / Path Illustration (P)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="pen-tool" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 8. Vector Shapes Tool (U) [Illustrator] -->
+      <button onclick="setTool('shape')" id="tool-shape" data-tip="Vector Shapes Studio (U)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="shapes" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 9. Gradient Fill Tool (G) -->
+      <button onclick="setTool('gradient')" id="tool-gradient" data-tip="Interactive Gradient Tool (G)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="blend" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 10. Typography Tool (T) -->
+      <button onclick="setTool('text')" id="tool-text" data-tip="Typography / Text Layer (T)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="type" class="w-4 h-4"></i>
+      </button>
+
+      <div class="w-6 border-t border-slate-100 my-0.5"></div>
+
+      <!-- 11. Eyedropper (I) -->
+      <button onclick="setTool('eyedropper')" id="tool-eyedropper" data-tip="Eyedropper Color Picker (I)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="pipette" class="w-4 h-4"></i>
+      </button>
+
+      <!-- 12. Hand Pan Tool (H) -->
+      <button onclick="setTool('hand')" id="tool-hand" data-tip="Hand / Pan Viewport (H)" class="tool-btn tool-tooltip w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 smooth-ui">
+        <i data-lucide="hand" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Dual Primary & Secondary Color Swatches at Bottom -->
+      <div class="mt-auto pt-2 flex flex-col items-center gap-1.5">
+        <div class="relative w-9 h-9">
+          <!-- Primary Color -->
+          <input type="color" id="primaryColorPicker" value="#2563eb" title="Primary Foreground Color"
+            class="w-6 h-6 rounded-md border-2 border-white shadow-md cursor-pointer absolute top-0 left-0 z-10 p-0 bg-transparent">
+          <!-- Secondary Color -->
+          <input type="color" id="secondaryColorPicker" value="#9333ea" title="Secondary Gradient/Stroke Color"
+            class="w-6 h-6 rounded-md border-2 border-white shadow-md cursor-pointer absolute bottom-0 right-0 z-0 p-0 bg-transparent">
+        </div>
+        <button onclick="swapColors()" title="Swap Colors (X)" class="text-[10px] text-slate-400 hover:text-brand-600 flex items-center gap-0.5">
+          <i data-lucide="arrow-left-right" class="w-3 h-3"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ================= CENTER INTERACTIVE STUDIO VIEWPORT ================= -->
+    <main id="viewportContainer" class="flex-1 workspace-bg relative overflow-hidden flex items-center justify-center">
+      
+      <!-- Top Horizontal Pixel Ruler -->
+      <div id="topRuler" class="absolute top-0 left-6 right-0 h-5 bg-white/95 border-b border-slate-200 z-20 flex items-end px-2 text-[9px] text-slate-400 font-mono pointer-events-none overflow-hidden">
+        <div class="flex justify-between w-full">
+          <span>0px</span><span>200px</span><span>400px</span><span>600px</span><span>800px</span><span>1000px</span><span>1200px</span>
+        </div>
+      </div>
+
+      <!-- Left Vertical Pixel Ruler -->
+      <div id="leftRuler" class="absolute top-5 left-0 bottom-0 w-6 bg-white/95 border-r border-slate-200 z-20 flex flex-col justify-between py-2 items-center text-[9px] text-slate-400 font-mono pointer-events-none overflow-hidden">
+        <span>0</span><span>200</span><span>400</span><span>600</span><span>800</span>
+      </div>
+
+      <!-- Corner Ruler Box -->
+      <div id="cornerRuler" class="absolute top-0 left-0 w-6 h-5 bg-white border-b border-r border-slate-200 z-20 flex items-center justify-center text-[8px] text-slate-400">px</div>
+
+      <!-- Transformable Stage Container -->
+      <div id="canvasStage" class="relative origin-center shadow-2xl rounded-sm border border-slate-300 canvas-checkerboard">
+        <!-- Main Composite Render Canvas -->
+        <canvas id="displayCanvas" width="1080" height="720" class="block"></canvas>
+        <!-- Interactive Overlay Canvas (Selection handles, Vector Pen nodes, Shape draft, Grid) -->
+        <canvas id="overlayCanvas" width="1080" height="720" class="absolute inset-0 pointer-events-none"></canvas>
+      </div>
+
+      <!-- Floating Bottom Status Bar inside Viewport -->
+      <div class="absolute bottom-3 left-9 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-full px-3 py-1 shadow-sm flex items-center gap-3 text-[11px] text-slate-500 z-20">
+        <span id="cursorCoordDisplay" class="font-mono">X: 0, Y: 0</span>
+        <span class="text-slate-300">|</span>
+        <span id="activeLayerStatus" class="font-medium text-slate-700">Layer: Background</span>
+      </div>
+
+      <!-- Toast Notification Pill -->
+      <div id="toast" class="absolute bottom-4 right-6 bg-slate-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 opacity-0 pointer-events-none translate-y-2 z-50 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-brand-400"></span>
+        <span id="toastText">Ready</span>
+      </div>
+    </main>
+
+    <!-- ================= RIGHT STUDIO DOCK (LAYERS, FX, ADJUSTMENTS, HISTORY) ================= -->
+    <aside class="w-80 bg-white border-l border-slate-200 flex flex-col shrink-0 z-30">
+      
+      <!-- Right Dock Navigation Tabs -->
+      <div class="grid grid-cols-3 border-b border-slate-200 bg-slate-50 p-1 gap-1 text-xs font-semibold">
+        <button onclick="switchRightTab('layers')" id="tabBtn-layers" class="py-1.5 rounded-lg bg-white text-brand-600 shadow-2xs border border-slate-200/80 flex items-center justify-center gap-1.5 smooth-ui">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Layers
+        </button>
+        <button onclick="switchRightTab('adjust')" id="tabBtn-adjust" class="py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 smooth-ui">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i> Color &amp; FX
+        </button>
+        <button onclick="switchRightTab('history')" id="tabBtn-history" class="py-1.5 rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 smooth-ui">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i> History
+        </button>
+      </div>
+
+      <!-- ==================== TAB 1: MULTI-LAYER SYSTEM & LAYER STYLES ==================== -->
+      <div id="tabPanel-layers" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Blend Mode & Opacity Row -->
+        <div class="p-3 border-b border-slate-100 space-y-2.5 bg-white">
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Blend Mode</label>
+              <select id="layerBlendSelect" onchange="updateActiveLayerProps()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-brand-600">
+                <option value="source-over">Normal</option>
+                <option value="multiply">Multiply (Darken)</option>
+                <option value="screen">Screen (Lighten)</option>
+                <option value="overlay">Overlay (Contrast)</option>
+                <option value="darken">Darken</option>
+                <option value="lighten">Lighten</option>
+                <option value="color-dodge">Color Dodge (Glow)</option>
+                <option value="difference">Difference</option>
+              </select>
+            </div>
+            <div class="w-28">
+              <div class="flex justify-between text-[10px] font-bold uppercase text-slate-400 mb-1">
+                <span>Opacity</span>
+                <span id="layerOpacityVal" class="text-brand-600">100%</span>
+              </div>
+              <input type="range" id="layerOpacitySlider" min="0" max="100" value="100" oninput="updateActiveLayerProps()" class="w-full">
+            </div>
+          </div>
+
+          <!-- Collapsible Layer Style (Drop Shadow FX) -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input type="checkbox" id="fxShadowToggle" onchange="updateActiveLayerProps()" class="accent-brand-600 rounded">
+                <span>Layer Drop Shadow (FX)</span>
+              </label>
+              <input type="color" id="fxShadowColor" value="#0f172a" onchange="updateActiveLayerProps()" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0">
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div>
+                <span class="text-slate-400">Blur Radius</span>
+                <input type="range" id="fxShadowBlur" min="0" max="50" value="16" oninput="updateActiveLayerProps()" class="w-full">
+              </div>
+              <div>
+                <span class="text-slate-400">Distance Y</span>
+                <input type="range" id="fxShadowOffsetY" min="-30" max="30" value="8" oninput="updateActiveLayerProps()" class="w-full">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer Stack List -->
+        <div id="layerListContainer" class="flex-1 overflow-y-auto p-2.5 space-y-1.5 bg-slate-50/50">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Bottom Layer Management Toolbar -->
+        <div class="p-2.5 bg-white border-t border-slate-200 flex items-center justify-between">
+          <button onclick="addNewLayer()" class="px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-2xs smooth-ui">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Layer
+          </button>
+          <div class="flex items-center gap-1">
+            <button onclick="duplicateActiveLayer()" title="Duplicate Layer" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+            <button onclick="moveLayerOrder(1)" title="Move Layer Up" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
+            <button onclick="moveLayerOrder(-1)" title="Move Layer Down" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
+            <button onclick="mergeLayerDown()" title="Merge Layer Down" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200"><i data-lucide="git-merge" class="w-3.5 h-3.5"></i></button>
+            <button onclick="deleteActiveLayer()" title="Delete Layer" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-slate-200"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: COLOR GRADING & STUDIO PRESETS ==================== -->
+      <div id="tabPanel-adjust" class="hidden flex-1 flex-col overflow-y-auto p-3.5 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Live Studio Color Grading</span>
+          <button onclick="resetGlobalGrading()" class="text-[11px] font-semibold text-brand-600 hover:underline">Reset All</button>
+        </div>
+
+        <div class="space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+          <!-- Brightness -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Brightness</span><span id="lbl-bright" class="text-slate-400">100%</span></div>
+            <input type="range" id="gradeBrightness" min="30" max="180" value="100" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+          <!-- Contrast -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Contrast</span><span id="lbl-contrast" class="text-slate-400">100%</span></div>
+            <input type="range" id="gradeContrast" min="30" max="200" value="100" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+          <!-- Saturation -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Saturation</span><span id="lbl-sat" class="text-slate-400">100%</span></div>
+            <input type="range" id="gradeSaturation" min="0" max="220" value="100" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+          <!-- Hue Rotate -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Hue Shift</span><span id="lbl-hue" class="text-slate-400">0°</span></div>
+            <input type="range" id="gradeHue" min="-180" max="180" value="0" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+          <!-- Sepia -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Warm Sepia</span><span id="lbl-sepia" class="text-slate-400">0%</span></div>
+            <input type="range" id="gradeSepia" min="0" max="100" value="0" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+          <!-- Vignette Overlay -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs"><span class="text-slate-600 font-medium">Studio Vignette</span><span id="lbl-vignette" class="text-slate-400">0%</span></div>
+            <input type="range" id="gradeVignette" min="0" max="100" value="0" oninput="updateGlobalGrading()" class="w-full">
+          </div>
+        </div>
+
+        <!-- 1-Click Pro Looks -->
+        <div>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">1-Click Studio Looks</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="applyStudioLook('cyberpunk')" class="px-2.5 py-2 border border-slate-200 hover:border-brand-600 rounded-lg text-xs font-medium text-slate-700 hover:bg-brand-50 smooth-ui text-left">⚡ Cyberpunk</button>
+            <button onclick="applyStudioLook('golden')" class="px-2.5 py-2 border border-slate-200 hover:border-brand-600 rounded-lg text-xs font-medium text-slate-700 hover:bg-brand-50 smooth-ui text-left">🌅 Golden Hour</button>
+            <button onclick="applyStudioLook('bw')" class="px-2.5 py-2 border border-slate-200 hover:border-brand-600 rounded-lg text-xs font-medium text-slate-700 hover:bg-brand-50 smooth-ui text-left">🎬 Matte B&amp;W</button>
+            <button onclick="applyStudioLook('pastel')" class="px-2.5 py-2 border border-slate-200 hover:border-brand-600 rounded-lg text-xs font-medium text-slate-700 hover:bg-brand-50 smooth-ui text-left">🎨 Pastel Art</button>
+          </div>
+        </div>
+
+        <!-- Direct Pixel Filters on Active Layer -->
+        <div>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Photoshop Layer Filters</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="runPixelFilter('posterize')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-600 hover:text-white rounded-lg text-xs font-medium smooth-ui">Posterize Vector</button>
+            <button onclick="runPixelFilter('edgeSketch')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-600 hover:text-white rounded-lg text-xs font-medium smooth-ui">Edge Line Sketch</button>
+            <button onclick="runPixelFilter('pixelate')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-600 hover:text-white rounded-lg text-xs font-medium smooth-ui">8-Bit Pixel Art</button>
+            <button onclick="runPixelFilter('invert')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-600 hover:text-white rounded-lg text-xs font-medium smooth-ui">Invert Layer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: INTERACTIVE HISTORY & SWATCHES ==================== -->
+      <div id="tabPanel-history" class="hidden flex-1 flex-col overflow-hidden p-3.5 space-y-4">
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Action History</span>
+            <span id="historyCountLabel" class="text-[11px] text-slate-400">1 step</span>
+          </div>
+          <div id="historyListContainer" class="flex-1 overflow-y-auto space-y-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Pro Color Swatches -->
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">Pro Color Swatches</span>
+          <div id="swatchGrid" class="grid grid-cols-7 gap-1.5">
+            <!-- Populated by JS -->
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1.5">Click to set Primary color • Shift+Click for Secondary color</p>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. NDOCS-STYLE "NDESIGN HOME & TEMPLATES" OVERLAY MODAL                   -->
+  <!-- ========================================================================= -->
+  <div id="homeTemplatesModal" class="fixed inset-0 bg-white/95 backdrop-blur-md z-50 overflow-y-auto hidden">
+    <div class="max-w-4xl mx-auto px-6 py-12">
+      
+      <!-- Top Ndesign Header (Matches user's Ndocs screenshot!) -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white shadow-sm">
+            <i data-lucide="pen-tool" class="w-4 h-4"></i>
+          </div>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ndesign</h1>
+        </div>
+        <button onclick="toggleHomeModal(false)" class="px-3.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+          Return to Studio Editor <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Search + Action Row (Exact Ndocs Layout: Search input + Blue "+ Blank canvas" + Import + Backup) -->
+      <div class="flex flex-wrap items-center gap-2.5 mb-8">
+        <input id="templateSearchInput" type="text" oninput="filterTemplateCards()" placeholder="Search templates (e.g., Thumbnail, Logo, Poster, Instagram)..." 
+          class="flex-1 min-w-[240px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20">
+        
+        <button onclick="createTemplateProject('blank')" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-xs smooth-ui cursor-pointer">
+          + Blank design
+        </button>
+
+        <label class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 cursor-pointer smooth-ui">
+          ↑ Import (.png, .jpg, .ndesign)
+          <input type="file" accept="image/*,.ndesign,.json" class="hidden" onchange="handleHubImport(event)">
+        </label>
+
+        <button onclick="saveProjectJSON()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 smooth-ui">
+          Backup
+        </button>
+      </div>
+
+      <!-- START WITH A TEMPLATE SECTION -->
+      <div class="mb-9">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">START WITH A TEMPLATE</h2>
+        <div id="templateCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5">
+          
+          <!-- 1. Blank -->
+          <button onclick="createTemplateProject('blank')" data-name="blank canvas standard" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center text-slate-600 group-hover:text-brand-600">
+              <i data-lucide="plus" class="w-6 h-6"></i>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Blank</span>
+              <span class="block text-[10px] text-slate-400">1080 × 720</span>
+            </div>
+          </button>
+
+          <!-- 2. YouTube Thumbnail -->
+          <button onclick="createTemplateProject('youtube')" data-name="youtube thumbnail video 16:9" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center">
+              <div class="w-11 h-8 rounded bg-slate-100 border border-slate-300 group-hover:border-brand-400 group-hover:bg-brand-50 flex items-center justify-center">
+                <i data-lucide="play" class="w-4 h-4 text-slate-400 group-hover:text-brand-600"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Thumbnail</span>
+              <span class="block text-[10px] text-slate-400">1280 × 720</span>
+            </div>
+          </button>
+
+          <!-- 3. Instagram Square -->
+          <button onclick="createTemplateProject('instagram')" data-name="instagram post social square" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center">
+              <div class="w-9 h-9 rounded-md bg-slate-100 border border-slate-300 group-hover:border-brand-400 group-hover:bg-brand-50 flex items-center justify-center">
+                <i data-lucide="instagram" class="w-4 h-4 text-slate-400 group-hover:text-brand-600"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Social Post</span>
+              <span class="block text-[10px] text-slate-400">1080 × 1080</span>
+            </div>
+          </button>
+
+          <!-- 4. Vector Logo Artboard -->
+          <button onclick="createTemplateProject('logo')" data-name="logo vector illustration badge" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center">
+              <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 group-hover:border-brand-400 group-hover:bg-brand-50 flex items-center justify-center">
+                <i data-lucide="pen-tool" class="w-4 h-4 text-slate-400 group-hover:text-brand-600"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Vector Logo</span>
+              <span class="block text-[10px] text-slate-400">1000 × 1000</span>
+            </div>
+          </button>
+
+          <!-- 5. Poster / Flyer -->
+          <button onclick="createTemplateProject('poster')" data-name="poster flyer cover print" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center">
+              <div class="w-8 h-11 rounded bg-slate-100 border border-slate-300 group-hover:border-brand-400 group-hover:bg-brand-50 flex items-center justify-center">
+                <i data-lucide="file-image" class="w-4 h-4 text-slate-400 group-hover:text-brand-600"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Poster</span>
+              <span class="block text-[10px] text-slate-400">900 × 1200</span>
+            </div>
+          </button>
+
+          <!-- 6. Banner Header -->
+          <button onclick="createTemplateProject('banner')" data-name="banner cover header wide" class="template-card group bg-white border border-slate-200 hover:border-brand-600 hover:shadow-md rounded-xl p-4 flex flex-col items-center justify-between h-36 smooth-ui">
+            <div class="flex-1 flex items-center justify-center">
+              <div class="w-12 h-6 rounded bg-slate-100 border border-slate-300 group-hover:border-brand-400 group-hover:bg-brand-50 flex items-center justify-center">
+                <i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <span class="block text-xs font-semibold text-slate-800">Web Banner</span>
+              <span class="block text-[10px] text-slate-400">1400 × 560</span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- YOUR DESIGNS SECTION (Matches Ndocs "YOUR DOCUMENTS" Card) -->
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">YOUR ACTIVE DESIGN</h2>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+          <div>
+            <h3 id="hubActiveDocTitle" class="text-sm font-bold text-slate-900">Untitled design</h3>
+            <p id="hubActiveDocSub" class="text-xs text-slate-400 mt-0.5">Multi-layer studio project • 1080 × 720 px</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 mr-2">Active Session</span>
+            <button onclick="toggleHomeModal(false)" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-medium text-slate-700">Open Studio</button>
+            <button onclick="duplicateActiveLayer(); toggleHomeModal(false);" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-medium text-slate-700">Duplicate Layer</button>
+            <button onclick="createTemplateProject('youtube')" class="px-3 py-1.5 border border-slate-300 hover:bg-brand-50 hover:text-brand-600 rounded-lg text-xs font-medium text-slate-700">Load Demo Art</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. APPLICATION ENGINE (MULTI-LAYER, VECTOR PEN, MAGIC WAND, FILTERS)      -->
+  <!-- ========================================================================= -->
+  <script>
+    // Initialize Lucide SVG icons
+    lucide.createIcons();
+
+    // ------------------- CORE STUDIO STATE -------------------
+    const displayCanvas = document.getElementById('displayCanvas');
+    const displayCtx = displayCanvas.getContext('2d');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const overlayCtx = overlayCanvas.getContext('2d');
+    const canvasStage = document.getElementById('canvasStage');
+    const viewportContainer = document.getElementById('viewportContainer');
+
+    let docWidth = 1080;
+    let docHeight = 720;
+
+    // Multi-Layer Stack (Index 0 = Bottom Layer, Last Index = Top Layer)
+    let layers = [];
+    let activeLayerId = null;
+    let layerCounter = 1;
+
+    // Viewport Transform (Zoom & Pan)
+    let zoomLevel = 0.85;
+    let panX = 0;
+    let panY = 0;
+    let isSpaceDown = false;
+    let isPanning = false;
+    let panStartMouseX = 0;
+    let panStartMouseY = 0;
+
+    // Active Tool & Interaction State
+    let currentTool = 'brush'; // 'move','crop','magic','brush','eraser','retouch','pen','shape','gradient','text','eyedropper','hand'
+    let isPointerDown = false;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let dragStartLayerX = 0;
+    let dragStartLayerY = 0;
+
+    // Illustrator Vector Pen Tool State
+    let penPoints = [];
+    let currentMousePos = { x: 0, y: 0 };
+
+    // View Toggles
+    let showGrid = false;
+    let showRulers = true;
+
+    // Global Non-Destructive Color Grading
+    const globalGrade = {
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      hue: 0,
+      sepia: 0,
+      vignette: 0
+    };
+
+    // Undo / Redo History Snapshots
+    const historyStack = [];
+    let historyIndex = -1;
+    const MAX_HISTORY = 18;
+
+    // Curated Swatches
+    const PRO_SWATCHES = [
+      '#2563eb', '#1d4ed8', '#3b82f6', '#06b6d4', '#10b981', '#22c55e', '#84cc16',
+      '#eab308', '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#d946ef', '#9333ea',
+      '#6366f1', '#0f172a', '#334155', '#64748b', '#94a3b8', '#e2e8f0', '#ffffff'
+    ];
+
+    // ------------------- INITIALIZATION -------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      initSwatches();
+      createTemplateProject('youtube', true);
+      setupKeyboardShortcuts();
+      fitCanvasToScreen();
+    });
+
+    function initSwatches() {
+      const grid = document.getElementById('swatchGrid');
+      grid.innerHTML = '';
+      PRO_SWATCHES.forEach(hex => {
+        const btn = document.createElement('button');
+        btn.className = 'w-6 h-6 rounded-md border border-slate-300 shadow-2xs hover:scale-110 smooth-ui';
+        btn.style.backgroundColor = hex;
+        btn.title = hex;
+        btn.onclick = (e) => {
+          if (e.shiftKey) {
+            document.getElementById('secondaryColorPicker').value = hex;
+            showToast(`Secondary color: ${hex}`);
+          } else {
+            document.getElementById('primaryColorPicker').value = hex;
+            showToast(`Primary color: ${hex}`);
+          }
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    // ------------------- LAYER DATA MODEL -------------------
+    function createLayerObject(name, type = 'paint', width = docWidth, height = docHeight) {
+      const c = document.createElement('canvas');
+      c.width = width;
+      c.height = height;
+      const ctx = c.getContext('2d');
+      return {
+        id: 'layer_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        name: name || `Layer ${layerCounter++}`,
+        type: type, // 'background', 'paint', 'vector', 'text', 'image'
+        canvas: c,
+        ctx: ctx,
+        x: 0,
+        y: 0,
+        scale: 1,
+        rotation: 0,
+        opacity: 100,
+        blendMode: 'source-over',
+        visible: true,
+        locked: false,
+        shadow: false,
+        shadowColor: '#0f172a',
+        shadowBlur: 16,
+        shadowOffsetY: 8
+      };
+    }
+
+    function getActiveLayer() {
+      return layers.find(l => l.id === activeLayerId) || layers[layers.length - 1];
+    }
+
+    // ------------------- COMPOSITE RENDER PIPELINE -------------------
+    function renderComposite() {
+      displayCtx.clearRect(0, 0, docWidth, docHeight);
+
+      // Apply Global Color Grading CSS filter on display context
+      displayCtx.save();
+      displayCtx.filter = `brightness(${globalGrade.brightness}%) contrast(${globalGrade.contrast}%) saturate(${globalGrade.saturation}%) hue-rotate(${globalGrade.hue}deg) sepia(${globalGrade.sepia}%)`;
+
+      layers.forEach(layer => {
+        if (!layer.visible || layer.opacity <= 0) return;
+
+        displayCtx.save();
+        displayCtx.globalAlpha = layer.opacity / 100;
+        displayCtx.globalCompositeOperation = layer.blendMode;
+
+        if (layer.shadow) {
+          displayCtx.shadowColor = layer.shadowColor;
+          displayCtx.shadowBlur = layer.shadowBlur;
+          displayCtx.shadowOffsetX = 0;
+          displayCtx.shadowOffsetY = layer.shadowOffsetY;
+        }
+
+        // Apply Layer Transform (Position, Scale, Rotation around center)
+        const cx = docWidth / 2 + layer.x;
+        const cy = docHeight / 2 + layer.y;
+        displayCtx.translate(cx, cy);
+        displayCtx.rotate((layer.rotation * Math.PI) / 180);
+        displayCtx.scale(layer.scale, layer.scale);
+        displayCtx.drawImage(layer.canvas, -docWidth / 2, -docHeight / 2);
+
+        displayCtx.restore();
+      });
+
+      displayCtx.restore();
+
+      // Apply Vignette if enabled
+      if (globalGrade.vignette > 0) {
+        const grad = displayCtx.createRadialGradient(
+          docWidth / 2, docHeight / 2, docWidth * 0.25,
+          docWidth / 2, docHeight / 2, Math.max(docWidth, docHeight) * 0.7
+        );
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, `rgba(15, 23, 42, ${(globalGrade.vignette / 100) * 0.75})`);
+        displayCtx.fillStyle = grad;
+        displayCtx.fillRect(0, 0, docWidth, docHeight);
+      }
+
+      renderOverlayCanvas();
+    }
+
+    // ------------------- OVERLAY CANVAS (BOUNDING BOX, PEN PATH, GRID) -------------------
+    function renderOverlayCanvas() {
+      overlayCtx.clearRect(0, 0, docWidth, docHeight);
+
+      // 1. Optional Design Grid
+      if (showGrid) {
+        overlayCtx.save();
+        overlayCtx.strokeStyle = 'rgba(37, 99, 235, 0.14)';
+        overlayCtx.lineWidth = 1;
+        const step = 40;
+        for (let x = step; x < docWidth; x += step) {
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(x, 0);
+          overlayCtx.lineTo(x, docHeight);
+          overlayCtx.stroke();
+        }
+        for (let y = step; y < docHeight; y += step) {
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(0, y);
+          overlayCtx.lineTo(docWidth, y);
+          overlayCtx.stroke();
+        }
+        overlayCtx.restore();
+      }
+
+      // 2. Active Layer Transform Frame when using Move Tool
+      const active = getActiveLayer();
+      if (currentTool === 'move' && active) {
+        overlayCtx.save();
+        const cx = docWidth / 2 + active.x;
+        const cy = docHeight / 2 + active.y;
+        overlayCtx.translate(cx, cy);
+        overlayCtx.rotate((active.rotation * Math.PI) / 180);
+        overlayCtx.scale(active.scale, active.scale);
+
+        overlayCtx.strokeStyle = '#2563eb';
+        overlayCtx.lineWidth = 2 / active.scale;
+        overlayCtx.setLineDash([6, 4]);
+        overlayCtx.strokeRect(-docWidth / 2 + 2, -docHeight / 2 + 2, docWidth - 4, docHeight - 4);
+        overlayCtx.restore();
+      }
+
+      // 3. Vector Pen Tool Live Path & Nodes
+      if (currentTool === 'pen' && penPoints.length > 0) {
+        overlayCtx.save();
+        overlayCtx.strokeStyle = '#2563eb';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(penPoints[0].x, penPoints[0].y);
+        for (let i = 1; i < penPoints.length; i++) {
+          overlayCtx.lineTo(penPoints[i].x, penPoints[i].y);
+        }
+        // Rubberband line to cursor
+        overlayCtx.lineTo(currentMousePos.x, currentMousePos.y);
+        overlayCtx.stroke();
+
+        // Draw Anchor Nodes
+        penPoints.forEach((pt, idx) => {
+          overlayCtx.fillStyle = idx === 0 ? '#2563eb' : '#ffffff';
+          overlayCtx.strokeStyle = '#2563eb';
+          overlayCtx.lineWidth = 2;
+          overlayCtx.beginPath();
+          overlayCtx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+          overlayCtx.fill();
+          overlayCtx.stroke();
+        });
+        overlayCtx.restore();
+      }
+    }
+
+    // ------------------- LAYER PANEL UI & CONTROLS -------------------
+    function renderLayerListUI() {
+      const container = document.getElementById('layerListContainer');
+      container.innerHTML = '';
+
+      // Render top-to-bottom (reverse of array order)
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const layer = layers[i];
+        const isActive = layer.id === activeLayerId;
+
+        const item = document.createElement('div');
+        item.className = `group flex items-center gap-2 p-2 rounded-xl border cursor-pointer smooth-ui ${
+          isActive
+            ? 'bg-brand-50/90 border-brand-600 shadow-2xs'
+            : 'bg-white border-slate-200/80 hover:border-slate-300'
+        }`;
+        item.onclick = () => selectLayer(layer.id);
+
+        // Visibility Eye Button
+        const visBtn = document.createElement('button');
+        visBtn.className = `p-1 rounded hover:bg-slate-200/60 ${layer.visible ? 'text-slate-600' : 'text-slate-300'}`;
+        visBtn.innerHTML = `<i data-lucide="${layer.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>`;
+        visBtn.onclick = (e) => {
+          e.stopPropagation();
+          layer.visible = !layer.visible;
+          renderComposite();
+          renderLayerListUI();
+        };
+
+        // Mini Canvas Thumbnail
+        const thumbWrapper = document.createElement('div');
+        thumbWrapper.className = 'w-10 h-7 rounded border border-slate-300 canvas-checkerboard overflow-hidden shrink-0 flex items-center justify-center';
+        const thumbCanvas = document.createElement('canvas');
+        thumbCanvas.width = 40;
+        thumbCanvas.height = 28;
+        thumbCanvas.getContext('2d').drawImage(layer.canvas, 0, 0, 40, 28);
+        thumbWrapper.appendChild(thumbCanvas);
+
+        // Layer Name & Type Badge
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'flex-1 min-w-0';
+        infoDiv.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs font-semibold truncate ${isActive ? 'text-brand-700' : 'text-slate-700'}">${layer.name}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
+            <span class="uppercase">${layer.type}</span>
+            <span>•</span>
+            <span>${layer.opacity}%</span>
+            ${layer.shadow ? '<span class="text-brand-600 font-bold">FX</span>' : ''}
+          </div>
+        `;
+        infoDiv.ondblclick = (e) => {
+          e.stopPropagation();
+          const newName = prompt('Rename Layer:', layer.name);
+          if (newName && newName.trim()) {
+            layer.name = newName.trim();
+            renderLayerListUI();
+          }
+        };
+
+        // Lock Toggle
+        const lockBtn = document.createElement('button');
+        lockBtn.className = `p-1 rounded hover:bg-slate-200/60 ${layer.locked ? 'text-amber-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'}`;
+        lockBtn.innerHTML = `<i data-lucide="${layer.locked ? 'lock' : 'unlock'}" class="w-3.5 h-3.5"></i>`;
+        lockBtn.onclick = (e) => {
+          e.stopPropagation();
+          layer.locked = !layer.locked;
+          renderLayerListUI();
+        };
+
+        item.appendChild(visBtn);
+        item.appendChild(thumbWrapper);
+        item.appendChild(infoDiv);
+        item.appendChild(lockBtn);
+        container.appendChild(item);
+      }
+
+      lucide.createIcons();
+      syncActiveLayerControls();
+    }
+
+    function selectLayer(id) {
+      activeLayerId = id;
+      renderLayerListUI();
+      renderComposite();
+    }
+
+    function syncActiveLayerControls() {
+      const active = getActiveLayer();
+      if (!active) return;
+
+      document.getElementById('activeLayerStatus').innerText = `Layer: ${active.name}`;
+      document.getElementById('layerBlendSelect').value = active.blendMode;
+      document.getElementById('layerOpacitySlider').value = active.opacity;
+      document.getElementById('layerOpacityVal').innerText = `${active.opacity}%`;
+      document.getElementById('fxShadowToggle').checked = active.shadow;
+      document.getElementById('fxShadowColor').value = active.shadowColor;
+      document.getElementById('fxShadowBlur').value = active.shadowBlur;
+      document.getElementById('fxShadowOffsetY').value = active.shadowOffsetY;
+
+      document.getElementById('moveScaleSlider').value = Math.round(active.scale * 100);
+      document.getElementById('moveScaleVal').innerText = `${Math.round(active.scale * 100)}%`;
+      document.getElementById('moveRotateSlider').value = active.rotation;
+      document.getElementById('moveRotateVal').innerText = `${active.rotation}°`;
+    }
+
+    function updateActiveLayerProps() {
+      const active = getActiveLayer();
+      if (!active) return;
+      active.blendMode = document.getElementById('layerBlendSelect').value;
+      active.opacity = parseInt(document.getElementById('layerOpacitySlider').value);
+      document.getElementById('layerOpacityVal').innerText = `${active.opacity}%`;
+
+      active.shadow = document.getElementById('fxShadowToggle').checked;
+      active.shadowColor = document.getElementById('fxShadowColor').value;
+      active.shadowBlur = parseInt(document.getElementById('fxShadowBlur').value);
+      active.shadowOffsetY = parseInt(document.getElementById('fxShadowOffsetY').value);
+
+      renderComposite();
+      renderLayerListUI();
+    }
+
+    function updateActiveLayerTransform() {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+      const sc = parseInt(document.getElementById('moveScaleSlider').value);
+      const rot = parseInt(document.getElementById('moveRotateSlider').value);
+      active.scale = sc / 100;
+      active.rotation = rot;
+      document.getElementById('moveScaleVal').innerText = `${sc}%`;
+      document.getElementById('moveRotateVal').innerText = `${rot}°`;
+      renderComposite();
+    }
+
+    function resetLayerTransform() {
+      const active = getActiveLayer();
+      if (!active) return;
+      active.x = 0;
+      active.y = 0;
+      active.scale = 1;
+      active.rotation = 0;
+      syncActiveLayerControls();
+      renderComposite();
+      recordHistory('Reset Transform');
+    }
+
+    function alignActiveLayer(mode) {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+      if (mode === 'centerH') active.x = 0;
+      if (mode === 'centerV') active.y = 0;
+      if (mode === 'left') active.x = -docWidth * 0.25;
+      if (mode === 'right') active.x = docWidth * 0.25;
+      if (mode === 'top') active.y = -docHeight * 0.25;
+      if (mode === 'bottom') active.y = docHeight * 0.25;
+      renderComposite();
+      recordHistory(`Align Layer (${mode})`);
+    }
+
+    // ------------------- LAYER OPERATIONS -------------------
+    function addNewLayer(customName, type = 'paint') {
+      const nl = createLayerObject(customName || `Layer ${layerCounter++}`, type);
+      layers.push(nl);
+      activeLayerId = nl.id;
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Added ${nl.name}`);
+      showToast(`Created ${nl.name}`);
+      return nl;
+    }
+
+    function duplicateActiveLayer() {
+      const active = getActiveLayer();
+      if (!active) return;
+      const copy = createLayerObject(`${active.name} Copy`, active.type);
+      copy.ctx.drawImage(active.canvas, 0, 0);
+      copy.x = active.x + 15;
+      copy.y = active.y + 15;
+      copy.scale = active.scale;
+      copy.rotation = active.rotation;
+      copy.opacity = active.opacity;
+      copy.blendMode = active.blendMode;
+      copy.shadow = active.shadow;
+      copy.shadowColor = active.shadowColor;
+      copy.shadowBlur = active.shadowBlur;
+      copy.shadowOffsetY = active.shadowOffsetY;
+
+      layers.push(copy);
+      activeLayerId = copy.id;
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Duplicated ${active.name}`);
+      showToast('Layer duplicated');
+    }
+
+    function deleteActiveLayer() {
+      if (layers.length <= 1) {
+        showToast('Cannot delete the last remaining layer');
+        return;
+      }
+      const idx = layers.findIndex(l => l.id === activeLayerId);
+      if (idx !== -1) {
+        const removed = layers.splice(idx, 1)[0];
+        activeLayerId = layers[Math.max(0, idx - 1)].id;
+        renderComposite();
+        renderLayerListUI();
+        recordHistory(`Deleted ${removed.name}`);
+        showToast('Layer deleted');
+      }
+    }
+
+    function moveLayerOrder(dir) {
+      const idx = layers.findIndex(l => l.id === activeLayerId);
+      const targetIdx = idx + dir;
+      if (idx === -1 || targetIdx < 0 || targetIdx >= layers.length) return;
+      const temp = layers[idx];
+      layers[idx] = layers[targetIdx];
+      layers[targetIdx] = temp;
+      renderComposite();
+      renderLayerListUI();
+    }
+
+    function mergeLayerDown() {
+      const idx = layers.findIndex(l => l.id === activeLayerId);
+      if (idx <= 0) {
+        showToast('No layer below to merge into');
+        return;
+      }
+      const topLayer = layers[idx];
+      const bottomLayer = layers[idx - 1];
+
+      bottomLayer.ctx.save();
+      bottomLayer.ctx.globalAlpha = topLayer.opacity / 100;
+      bottomLayer.ctx.globalCompositeOperation = topLayer.blendMode;
+      const cx = docWidth / 2 + topLayer.x - bottomLayer.x;
+      const cy = docHeight / 2 + topLayer.y - bottomLayer.y;
+      bottomLayer.ctx.translate(cx, cy);
+      bottomLayer.ctx.rotate((topLayer.rotation * Math.PI) / 180);
+      bottomLayer.ctx.scale(topLayer.scale, topLayer.scale);
+      bottomLayer.ctx.drawImage(topLayer.canvas, -docWidth / 2, -docHeight / 2);
+      bottomLayer.ctx.restore();
+
+      layers.splice(idx, 1);
+      activeLayerId = bottomLayer.id;
+      renderComposite();
+      renderLayerListUI();
+      recordHistory('Merged Layer Down');
+      showToast('Merged layer down');
+    }
+
+    function flattenAllLayers() {
+      const flat = createLayerObject('Flattened Image', 'background');
+      renderComposite();
+      flat.ctx.drawImage(displayCanvas, 0, 0);
+      layers = [flat];
+      activeLayerId = flat.id;
+      renderComposite();
+      renderLayerListUI();
+      recordHistory('Flattened Image');
+      showToast('All layers flattened');
+    }
+
+    function clearActiveLayer() {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+      active.ctx.clearRect(0, 0, docWidth, docHeight);
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Cleared ${active.name}`);
+      showToast('Cleared active layer');
+    }
+
+    function flipActiveLayer(axis) {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+      const temp = document.createElement('canvas');
+      temp.width = docWidth;
+      temp.height = docHeight;
+      temp.getContext('2d').drawImage(active.canvas, 0, 0);
+
+      active.ctx.clearRect(0, 0, docWidth, docHeight);
+      active.ctx.save();
+      if (axis === 'h') {
+        active.ctx.translate(docWidth, 0);
+        active.ctx.scale(-1, 1);
+      } else {
+        active.ctx.translate(0, docHeight);
+        active.ctx.scale(1, -1);
+      }
+      active.ctx.drawImage(temp, 0, 0);
+      active.ctx.restore();
+
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Flipped Layer ${axis.toUpperCase()}`);
+    }
+
+    // ------------------- TOOL SWITCHING & CONTEXTUAL BAR -------------------
+    const TOOL_NAMES = {
+      move: 'Move & Transform (V)',
+      crop: 'Canvas Size & Crop (C)',
+      magic: 'Magic Color Cutout (W)',
+      brush: 'Pro Brush Tool (B)',
+      eraser: 'Eraser Tool (E)',
+      retouch: 'Retouch / Local FX Brush (J)',
+      pen: 'Vector Pen Illustration (P)',
+      shape: 'Vector Shapes Studio (U)',
+      gradient: 'Gradient Fill Tool (G)',
+      text: 'Pro Typography Tool (T)',
+      eyedropper: 'Eyedropper Color Picker (I)',
+      hand: 'Hand / Pan Viewport (H)'
+    };
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.getElementById('activeToolTitle').innerText = TOOL_NAMES[tool] || tool;
+
+      // Update left toolbar active blue button highlight
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-sm', 'shadow-brand-500/30');
+        btn.classList.add('text-slate-500');
+      });
+      const activeBtn = document.getElementById(`tool-${tool}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-sm', 'shadow-brand-500/30');
+        activeBtn.classList.remove('text-slate-500');
+      }
+
+      // Show matching Contextual Options Bar group
+      const groups = ['move', 'brush', 'magic', 'retouch', 'pen', 'shape', 'gradient', 'text', 'crop'];
+      groups.forEach(g => {
+        const el = document.getElementById(`opt-${g}`);
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+
+      const targetGroup = (tool === 'eraser') ? 'brush' : tool;
+      const activeGroupEl = document.getElementById(`opt-${targetGroup}`);
+      if (activeGroupEl) {
+        activeGroupEl.classList.remove('hidden');
+        activeGroupEl.classList.add('flex');
+      }
+
+      // Update cursor
+      if (tool === 'move') displayCanvas.style.cursor = 'move';
+      else if (tool === 'hand') displayCanvas.style.cursor = 'grab';
+      else if (tool === 'text') displayCanvas.style.cursor = 'text';
+      else displayCanvas.style.cursor = 'crosshair';
+
+      renderOverlayCanvas();
+    }
+
+    // ------------------- CANVAS POINTER INTERACTION ENGINE -------------------
+    function getCanvasMouseCoords(e) {
+      const rect = displayCanvas.getBoundingClientRect();
+      const scaleX = docWidth / rect.width;
+      const scaleY = docHeight / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    // Convert document coords into active layer's local un-transformed coords
+    function getLayerLocalCoords(docX, docY, layer) {
+      const dx = docX - (docWidth / 2 + layer.x);
+      const dy = docY - (docHeight / 2 + layer.y);
+      const rad = (-layer.rotation * Math.PI) / 180;
+      const rx = (dx * Math.cos(rad) - dy * Math.sin(rad)) / layer.scale;
+      const ry = (dx * Math.sin(rad) + dy * Math.cos(rad)) / layer.scale;
+      return {
+        x: rx + docWidth / 2,
+        y: ry + docHeight / 2
+      };
+    }
+
+    displayCanvas.addEventListener('mousedown', (e) => {
+      if (currentTool === 'hand' || isSpaceDown) {
+        isPanning = true;
+        panStartMouseX = e.clientX - panX;
+        panStartMouseY = e.clientY - panY;
+        displayCanvas.style.cursor = 'grabbing';
+        return;
+      }
+
+      const active = getActiveLayer();
+      if (!active) return;
+
+      const pt = getCanvasMouseCoords(e);
+      startX = pt.x;
+      startY = pt.y;
+      lastX = pt.x;
+      lastY = pt.y;
+
+      // Eyedropper works even on locked layers
+      if (currentTool === 'eyedropper') {
+        pickColorFromCanvas(pt.x, pt.y);
+        return;
+      }
+
+      if (active.locked) {
+        showToast('Layer is locked! Unlock it in the Layers panel first.');
+        return;
+      }
+
+      // Vector Pen Tool (Click to add node)
+      if (currentTool === 'pen') {
+        // Check if clicking near first point to close shape
+        if (penPoints.length >= 3) {
+          const distToFirst = Math.hypot(pt.x - penPoints[0].x, pt.y - penPoints[0].y);
+          if (distToFirst < 14) {
+            finishVectorPenPath(true);
+            return;
+          }
+        }
+        penPoints.push({ x: pt.x, y: pt.y });
+        document.getElementById('penPointCount').innerText = `${penPoints.length} points placed`;
+        renderOverlayCanvas();
+        return;
+      }
+
+      // Magic Color Cutout Tool (Click pixel color to make transparent)
+      if (currentTool === 'magic') {
+        const localPt = getLayerLocalCoords(pt.x, pt.y, active);
+        performMagicColorCutout(active, Math.round(localPt.x), Math.round(localPt.y));
+        return;
+      }
+
+      // Text Tool (Click on canvas to place text layer)
+      if (currentTool === 'text') {
+        addTextLayerAt(pt.x, pt.y);
+        return;
+      }
+
+      isPointerDown = true;
+
+      if (currentTool === 'move') {
+        dragStartLayerX = active.x;
+        dragStartLayerY = active.y;
+      } else if (currentTool === 'brush' || currentTool === 'eraser') {
+        const localPt = getLayerLocalCoords(pt.x, pt.y, active);
+        lastX = localPt.x;
+        lastY = localPt.y;
+        paintStrokeSegment(active, localPt.x, localPt.y, localPt.x, localPt.y);
+        renderComposite();
+      } else if (currentTool === 'retouch') {
+        const localPt = getLayerLocalCoords(pt.x, pt.y, active);
+        applyLocalRetouchBrush(active, localPt.x, localPt.y);
+        renderComposite();
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const pt = getCanvasMouseCoords(e);
+      currentMousePos = pt;
+      if (pt.x >= 0 && pt.x <= docWidth && pt.y >= 0 && pt.y <= docHeight) {
+        document.getElementById('cursorCoordDisplay').innerText = `X: ${Math.round(pt.x)}, Y: ${Math.round(pt.y)}`;
+      }
+
+      if (isPanning) {
+        panX = e.clientX - panStartMouseX;
+        panY = e.clientY - panStartMouseY;
+        applyViewportTransform();
+        return;
+      }
+
+      if (currentTool === 'pen' && penPoints.length > 0) {
+        renderOverlayCanvas();
+      }
+
+      if (!isPointerDown) return;
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+
+      if (currentTool === 'move') {
+        const dx = pt.x - startX;
+        const dy = pt.y - startY;
+        active.x = dragStartLayerX + dx;
+        active.y = dragStartLayerY + dy;
+        renderComposite();
+      } else if (currentTool === 'brush' || currentTool === 'eraser') {
+        const localPt = getLayerLocalCoords(pt.x, pt.y, active);
+        paintStrokeSegment(active, lastX, lastY, localPt.x, localPt.y);
+        lastX = localPt.x;
+        lastY = localPt.y;
+        renderComposite();
+      } else if (currentTool === 'retouch') {
+        const localPt = getLayerLocalCoords(pt.x, pt.y, active);
+        applyLocalRetouchBrush(active, localPt.x, localPt.y);
+        renderComposite();
+      } else if (currentTool === 'shape') {
+        renderOverlayCanvas();
+        // Live Vector Shape Preview on Overlay Canvas
+        drawVectorShape(overlayCtx, startX, startY, pt.x, pt.y);
+      } else if (currentTool === 'gradient') {
+        renderOverlayCanvas();
+        overlayCtx.save();
+        overlayCtx.strokeStyle = '#2563eb';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(startX, startY);
+        overlayCtx.lineTo(pt.x, pt.y);
+        overlayCtx.stroke();
+        overlayCtx.restore();
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (isPanning) {
+        isPanning = false;
+        displayCanvas.style.cursor = currentTool === 'hand' ? 'grab' : 'crosshair';
+        return;
+      }
+
+      if (!isPointerDown) return;
+      isPointerDown = false;
+
+      const active = getActiveLayer();
+      const pt = getCanvasMouseCoords(e);
+
+      if (currentTool === 'shape' && active) {
+        const createNew = document.getElementById('shapeNewLayerCheck').checked;
+        const shapeType = document.getElementById('shapeTypeSelect').value;
+        const targetLayer = createNew ? addNewLayer(`Vector ${shapeType}`, 'vector') : active;
+        drawVectorShape(targetLayer.ctx, startX, startY, pt.x, pt.y);
+        renderComposite();
+        renderLayerListUI();
+        recordHistory(`Added Vector ${shapeType}`);
+      } else if (currentTool === 'gradient' && active) {
+        applyInteractiveGradient(active.ctx, startX, startY, pt.x, pt.y);
+        renderComposite();
+        renderLayerListUI();
+        recordHistory('Applied Gradient');
+      } else if (currentTool === 'brush' || currentTool === 'eraser' || currentTool === 'retouch' || currentTool === 'move') {
+        renderLayerListUI();
+        recordHistory(TOOL_NAMES[currentTool].split(' (')[0]);
+      }
+    });
+
+    // Double click finishes Vector Pen Path
+    displayCanvas.addEventListener('dblclick', () => {
+      if (currentTool === 'pen' && penPoints.length >= 2) {
+        finishVectorPenPath(true);
+      }
+    });
+
+    // ------------------- PRO BRUSH & SYMMETRY PAINT ENGINE -------------------
+    function paintStrokeSegment(layer, x1, y1, x2, y2) {
+      const ctx = layer.ctx;
+      const size = parseInt(document.getElementById('brushSizeInput').value) || 10;
+      const opacity = (parseInt(document.getElementById('brushOpacityInput').value) || 100) / 100;
+      const style = document.getElementById('brushStyleSelect').value;
+      const symmetry = document.getElementById('brushSymmetrySelect').value;
+      const primaryColor = document.getElementById('primaryColorPicker').value;
+
+      function drawSingleStroke(ax, ay, bx, by) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.lineCap = style === 'calligraphy' ? 'square' : 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = size;
+
+        if (currentTool === 'eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.globalAlpha = opacity;
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.stroke();
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = opacity;
+          ctx.strokeStyle = primaryColor;
+
+          if (style === 'airbrush') {
+            ctx.shadowColor = primaryColor;
+            ctx.shadowBlur = size * 0.8;
+          } else if (style === 'neon') {
+            ctx.shadowColor = primaryColor;
+            ctx.shadowBlur = size * 1.6;
+            ctx.strokeStyle = '#ffffff';
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Primary stroke
+      drawSingleStroke(x1, y1, x2, y2);
+
+      // Symmetry Modes (Illustrator Mandala / Mirror feature)
+      if (symmetry === 'mirrorH' || symmetry === 'mandala4') {
+        drawSingleStroke(docWidth - x1, y1, docWidth - x2, y2);
+      }
+      if (symmetry === 'mandala4') {
+        drawSingleStroke(x1, docHeight - y1, x2, docHeight - y2);
+        drawSingleStroke(docWidth - x1, docHeight - y1, docWidth - x2, docHeight - y2);
+      }
+    }
+
+    // ------------------- VECTOR PEN PATH ENGINE (ILLUSTRATOR) -------------------
+    function finishVectorPenPath(closeShape = true) {
+      if (penPoints.length < 2) {
+        clearVectorPenPoints();
+        return;
+      }
+      const penLayer = addNewLayer('Vector Path', 'vector');
+      const ctx = penLayer.ctx;
+      const mode = document.getElementById('penModeSelect').value;
+      const strokeW = parseInt(document.getElementById('penStrokeWidth').value) || 3;
+      const fillCol = document.getElementById('primaryColorPicker').value;
+      const strokeCol = document.getElementById('secondaryColorPicker').value;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(penPoints[0].x, penPoints[0].y);
+      for (let i = 1; i < penPoints.length; i++) {
+        ctx.lineTo(penPoints[i].x, penPoints[i].y);
+      }
+      if (closeShape) ctx.closePath();
+
+      if (mode === 'both' || mode === 'fill') {
+        ctx.fillStyle = fillCol;
+        ctx.fill();
+      }
+      if (mode === 'both' || mode === 'stroke') {
+        ctx.lineWidth = strokeW;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = mode === 'stroke' ? fillCol : strokeCol;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      clearVectorPenPoints();
+      renderComposite();
+      renderLayerListUI();
+      recordHistory('Created Vector Path');
+      showToast('Vector path rendered onto new layer');
+    }
+
+    function clearVectorPenPoints() {
+      penPoints = [];
+      document.getElementById('penPointCount').innerText = '0 points placed';
+      renderOverlayCanvas();
+    }
+
+    // ------------------- VECTOR SHAPES STUDIO (ILLUSTRATOR) -------------------
+    function drawVectorShape(ctx, x1, y1, x2, y2) {
+      const type = document.getElementById('shapeTypeSelect').value;
+      const fillStyle = document.getElementById('shapeFillStyle').value;
+      const strokeW = parseInt(document.getElementById('shapeStrokeWidth').value) || 0;
+      const c1 = document.getElementById('primaryColorPicker').value;
+      const c2 = document.getElementById('secondaryColorPicker').value;
+
+      const left = Math.min(x1, x2);
+      const top = Math.min(y1, y2);
+      const w = Math.max(4, Math.abs(x2 - x1));
+      const h = Math.max(4, Math.abs(y2 - y1));
+      const cx = left + w / 2;
+      const cy = top + h / 2;
+      const rx = w / 2;
+      const ry = h / 2;
+
+      ctx.save();
+      ctx.beginPath();
+
+      if (type === 'rect') {
+        ctx.rect(left, top, w, h);
+      } else if (type === 'roundRect') {
+        const r = Math.min(24, w / 4, h / 4);
+        ctx.roundRect ? ctx.roundRect(left, top, w, h, r) : ctx.rect(left, top, w, h);
+      } else if (type === 'circle') {
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      } else if (type === 'triangle') {
+        ctx.moveTo(cx, top);
+        ctx.lineTo(left + w, top + h);
+        ctx.lineTo(left, top + h);
+        ctx.closePath();
+      } else if (type === 'polygon') {
+        const sides = 6;
+        for (let i = 0; i < sides; i++) {
+          const ang = (i * 2 * Math.PI) / sides - Math.PI / 2;
+          const px = cx + rx * Math.cos(ang);
+          const py = cy + ry * Math.sin(ang);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else if (type === 'star') {
+        const spikes = 5;
+        let rot = (Math.PI / 2) * 3;
+        const step = Math.PI / spikes;
+        ctx.moveTo(cx, cy - ry);
+        for (let i = 0; i < spikes; i++) {
+          ctx.lineTo(cx + Math.cos(rot) * rx, cy + Math.sin(rot) * ry);
+          rot += step;
+          ctx.lineTo(cx + Math.cos(rot) * (rx * 0.45), cy + Math.sin(rot) * (ry * 0.45));
+          rot += step;
+        }
+        ctx.closePath();
+      } else if (type === 'heart') {
+        const topCurveHeight = h * 0.3;
+        ctx.moveTo(cx, top + topCurveHeight);
+        ctx.bezierCurveTo(cx, top, left, top, left, top + topCurveHeight);
+        ctx.bezierCurveTo(left, top + (h + topCurveHeight) / 2, cx, top + (h + topCurveHeight) / 1.4, cx, top + h);
+        ctx.bezierCurveTo(cx, top + (h + topCurveHeight) / 1.4, left + w, top + (h + topCurveHeight) / 2, left + w, top + topCurveHeight);
+        ctx.bezierCurveTo(left + w, top, cx, top, cx, top + topCurveHeight);
+        ctx.closePath();
+      } else if (type === 'arrow') {
+        ctx.moveTo(left, cy - h * 0.2);
+        ctx.lineTo(left + w * 0.6, cy - h * 0.2);
+        ctx.lineTo(left + w * 0.6, top);
+        ctx.lineTo(left + w, cy);
+        ctx.lineTo(left + w * 0.6, top + h);
+        ctx.lineTo(left + w * 0.6, cy + h * 0.2);
+        ctx.lineTo(left, cy + h * 0.2);
+        ctx.closePath();
+      }
+
+      if (fillStyle === 'solid') {
+        ctx.fillStyle = c1;
+        ctx.fill();
+      } else if (fillStyle === 'gradient') {
+        const grad = ctx.createLinearGradient(left, top, left + w, top + h);
+        grad.addColorStop(0, c1);
+        grad.addColorStop(1, c2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      if (strokeW > 0) {
+        ctx.lineWidth = strokeW;
+        ctx.strokeStyle = fillStyle === 'none' ? c1 : c2;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // ------------------- MAGIC COLOR CUTOUT / WAND (PHOTOSHOP) -------------------
+    function performMagicColorCutout(layer, startX, startY) {
+      if (startX < 0 || startX >= docWidth || startY < 0 || startY >= docHeight) return;
+      const imgData = layer.ctx.getImageData(0, 0, docWidth, docHeight);
+      const data = imgData.data;
+      const idx = (startY * docWidth + startX) * 4;
+      const targetR = data[idx];
+      const targetG = data[idx + 1];
+      const targetB = data[idx + 2];
+      const targetA = data[idx + 3];
+
+      if (targetA === 0) {
+        showToast('Clicked area is already transparent');
+        return;
+      }
+
+      const tolerance = parseInt(document.getElementById('magicToleranceInput').value) || 32;
+      const maxDist = tolerance * 2.2;
+      let removedCount = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const dr = data[i] - targetR;
+        const dg = data[i + 1] - targetG;
+        const db = data[i + 2] - targetB;
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (dist <= maxDist) {
+          data[i + 3] = 0; // Make transparent
+          removedCount++;
+        }
+      }
+
+      layer.ctx.putImageData(imgData, 0, 0);
+      renderComposite();
+      renderLayerListUI();
+      recordHistory('Magic Color Cutout');
+      showToast(`Cut out ${removedCount.toLocaleString()} matching pixels!`);
+    }
+
+    // ------------------- RETOUCH / LOCAL PIXELATE & DODGE BRUSH -------------------
+    function applyLocalRetouchBrush(layer, cx, cy) {
+      const mode = document.getElementById('retouchModeSelect').value;
+      const size = parseInt(document.getElementById('retouchSizeInput').value) || 36;
+      const half = Math.round(size / 2);
+      const sx = Math.max(0, Math.round(cx - half));
+      const sy = Math.max(0, Math.round(cy - half));
+      const sw = Math.min(docWidth - sx, size);
+      const sh = Math.min(docHeight - sy, size);
+      if (sw <= 0 || sh <= 0) return;
+
+      const imgData = layer.ctx.getImageData(sx, sy, sw, sh);
+      const d = imgData.data;
+
+      if (mode === 'pixelate') {
+        const block = 8;
+        for (let y = 0; y < sh; y += block) {
+          for (let x = 0; x < sw; x += block) {
+            const pIdx = (y * sw + x) * 4;
+            const r = d[pIdx], g = d[pIdx + 1], b = d[pIdx + 2];
+            for (let by = 0; by < block && y + by < sh; by++) {
+              for (let bx = 0; bx < block && x + bx < sw; bx++) {
+                const idx = ((y + by) * sw + (x + bx)) * 4;
+                d[idx] = r; d[idx + 1] = g; d[idx + 2] = b;
+              }
+            }
+          }
+        }
+      } else {
+        for (let i = 0; i < d.length; i += 4) {
+          if (mode === 'dodge') {
+            d[i] = Math.min(255, d[i] + 10);
+            d[i + 1] = Math.min(255, d[i + 1] + 10);
+            d[i + 2] = Math.min(255, d[i + 2] + 10);
+          } else if (mode === 'burn') {
+            d[i] = Math.max(0, d[i] - 10);
+            d[i + 1] = Math.max(0, d[i + 1] - 10);
+            d[i + 2] = Math.max(0, d[i + 2] - 10);
+          } else if (mode === 'desaturate') {
+            const avg = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
+            d[i] = d[i + 1] = d[i + 2] = avg;
+          }
+        }
+      }
+
+      layer.ctx.putImageData(imgData, sx, sy);
+    }
+
+    // ------------------- INTERACTIVE GRADIENT & TYPOGRAPHY -------------------
+    function applyInteractiveGradient(ctx, x1, y1, x2, y2) {
+      const type = document.getElementById('gradTypeSelect').value;
+      const c1 = document.getElementById('primaryColorPicker').value;
+      const c2 = document.getElementById('secondaryColorPicker').value;
+
+      let grad;
+      if (type === 'radial') {
+        const r = Math.max(10, Math.hypot(x2 - x1, y2 - y1));
+        grad = ctx.createRadialGradient(x1, y1, 5, x1, y1, r);
+      } else {
+        grad = ctx.createLinearGradient(x1, y1, x2, y2);
+      }
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, docWidth, docHeight);
+      ctx.restore();
+    }
+
+    function addTextLayerDirectly() {
+      addTextLayerAt(docWidth / 2, docHeight / 2);
+    }
+
+    function addTextLayerAt(x, y) {
+      const content = document.getElementById('textContentInput').value || 'Ndesign Studio';
+      const font = document.getElementById('textFontSelect').value;
+      const size = parseInt(document.getElementById('textSizeInput').value) || 56;
+      const hasOutline = document.getElementById('textStrokeCheck').checked;
+      const c1 = document.getElementById('primaryColorPicker').value;
+      const c2 = document.getElementById('secondaryColorPicker').value;
+
+      const tLayer = addNewLayer(`T: ${content.substring(0, 14)}`, 'text');
+      const ctx = tLayer.ctx;
+      ctx.save();
+      ctx.font = `800 ${size}px ${font}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = c1;
+      ctx.fillText(content, x, y);
+
+      if (hasOutline) {
+        ctx.lineWidth = Math.max(2, size * 0.05);
+        ctx.strokeStyle = c2;
+        ctx.strokeText(content, x, y);
+      }
+      ctx.restore();
+
+      setTool('move'); // Switch to move tool so user can position text immediately
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Added Text "${content}"`);
+    }
+
+    // ------------------- EYEDROPPER & COLOR SWAP -------------------
+    function pickColorFromCanvas(x, y) {
+      const pixel = displayCtx.getImageData(Math.round(x), Math.round(y), 1, 1).data;
+      const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+      document.getElementById('primaryColorPicker').value = hex;
+      showToast(`Picked color: ${hex.toUpperCase()}`);
+    }
+
+    function swapColors() {
+      const p = document.getElementById('primaryColorPicker');
+      const s = document.getElementById('secondaryColorPicker');
+      const temp = p.value;
+      p.value = s.value;
+      s.value = temp;
+      showToast('Swapped Primary & Secondary colors');
+    }
+
+    // ------------------- PHOTOSHOP PIXEL FILTERS & GLOBAL GRADING -------------------
+    function runPixelFilter(filterName) {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+
+      const imgData = active.ctx.getImageData(0, 0, docWidth, docHeight);
+      const d = imgData.data;
+
+      if (filterName === 'invert') {
+        for (let i = 0; i < d.length; i += 4) {
+          d[i] = 255 - d[i];
+          d[i + 1] = 255 - d[i + 1];
+          d[i + 2] = 255 - d[i + 2];
+        }
+      } else if (filterName === 'posterize') {
+        const levels = 4;
+        const step = 255 / (levels - 1);
+        for (let i = 0; i < d.length; i += 4) {
+          d[i] = Math.round(Math.round(d[i] / step) * step);
+          d[i + 1] = Math.round(Math.round(d[i + 1] / step) * step);
+          d[i + 2] = Math.round(Math.round(d[i + 2] / step) * step);
+        }
+      } else if (filterName === 'autoEnhance') {
+        for (let i = 0; i < d.length; i += 4) {
+          d[i] = Math.min(255, Math.max(0, (d[i] - 128) * 1.22 + 128));
+          d[i + 1] = Math.min(255, Math.max(0, (d[i + 1] - 128) * 1.22 + 128));
+          d[i + 2] = Math.min(255, Math.max(0, (d[i + 2] - 128) * 1.22 + 128));
+        }
+      } else if (filterName === 'warmVintage') {
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          d[i] = Math.min(255, r * 0.9 + g * 0.25);
+          d[i + 1] = Math.min(255, g * 0.92 + r * 0.1);
+          d[i + 2] = b * 0.78;
+        }
+      } else if (filterName === 'edgeSketch') {
+        const copy = new Uint8ClampedArray(d);
+        for (let y = 1; y < docHeight - 1; y++) {
+          for (let x = 1; x < docWidth - 1; x++) {
+            const idx = (y * docWidth + x) * 4;
+            const rightIdx = (y * docWidth + (x + 1)) * 4;
+            const downIdx = ((y + 1) * docWidth + x) * 4;
+            const diff = Math.abs(copy[idx] - copy[rightIdx]) + Math.abs(copy[idx] - copy[downIdx]);
+            const val = diff > 26 ? 15 : 255;
+            d[idx] = val;
+            d[idx + 1] = val;
+            d[idx + 2] = val === 15 ? 110 : 255;
+          }
+        }
+      } else if (filterName === 'pixelate') {
+        const size = 12;
+        for (let y = 0; y < docHeight; y += size) {
+          for (let x = 0; x < docWidth; x += size) {
+            const pIdx = (y * docWidth + x) * 4;
+            const r = d[pIdx], g = d[pIdx + 1], b = d[pIdx + 2], a = d[pIdx + 3];
+            for (let by = 0; by < size && y + by < docHeight; by++) {
+              for (let bx = 0; bx < size && x + bx < docWidth; bx++) {
+                const idx = ((y + by) * docWidth + (x + bx)) * 4;
+                d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = a;
+              }
+            }
+          }
+        }
+      }
+
+      active.ctx.putImageData(imgData, 0, 0);
+      renderComposite();
+      renderLayerListUI();
+      recordHistory(`Filter: ${filterName}`);
+      showToast(`Applied ${filterName} filter to ${active.name}`);
+    }
+
+    function updateGlobalGrading() {
+      globalGrade.brightness = parseInt(document.getElementById('gradeBrightness').value);
+      globalGrade.contrast = parseInt(document.getElementById('gradeContrast').value);
+      globalGrade.saturation = parseInt(document.getElementById('gradeSaturation').value);
+      globalGrade.hue = parseInt(document.getElementById('gradeHue').value);
+      globalGrade.sepia = parseInt(document.getElementById('gradeSepia').value);
+      globalGrade.vignette = parseInt(document.getElementById('gradeVignette').value);
+
+      document.getElementById('lbl-bright').innerText = `${globalGrade.brightness}%`;
+      document.getElementById('lbl-contrast').innerText = `${globalGrade.contrast}%`;
+      document.getElementById('lbl-sat').innerText = `${globalGrade.saturation}%`;
+      document.getElementById('lbl-hue').innerText = `${globalGrade.hue}°`;
+      document.getElementById('lbl-sepia').innerText = `${globalGrade.sepia}%`;
+      document.getElementById('lbl-vignette').innerText = `${globalGrade.vignette}%`;
+
+      renderComposite();
+    }
+
+    function resetGlobalGrading() {
+      document.getElementById('gradeBrightness').value = 100;
+      document.getElementById('gradeContrast').value = 100;
+      document.getElementById('gradeSaturation').value = 100;
+      document.getElementById('gradeHue').value = 0;
+      document.getElementById('gradeSepia').value = 0;
+      document.getElementById('gradeVignette').value = 0;
+      updateGlobalGrading();
+      showToast('Color grading reset');
+    }
+
+    function applyStudioLook(look) {
+      resetGlobalGrading();
+      if (look === 'cyberpunk') {
+        document.getElementById('gradeContrast').value = 130;
+        document.getElementById('gradeSaturation').value = 165;
+        document.getElementById('gradeHue').value = -25;
+        document.getElementById('gradeVignette').value = 45;
+      } else if (look === 'golden') {
+        document.getElementById('gradeBrightness').value = 106;
+        document.getElementById('gradeSaturation').value = 135;
+        document.getElementById('gradeSepia').value = 35;
+      } else if (look === 'bw') {
+        document.getElementById('gradeSaturation').value = 0;
+        document.getElementById('gradeContrast').value = 135;
+        document.getElementById('gradeVignette').value = 30;
+      } else if (look === 'pastel') {
+        document.getElementById('gradeBrightness').value = 112;
+        document.getElementById('gradeContrast').value = 88;
+        document.getElementById('gradeSaturation').value = 85;
+      }
+      updateGlobalGrading();
+      showToast(`Applied ${look} studio look`);
+    }
+
+    // ------------------- HISTORY UNDO / REDO ENGINE -------------------
+    function recordHistory(actionLabel) {
+      // Remove future states if we branched after undoing
+      if (historyIndex < historyStack.length - 1) {
+        historyStack.splice(historyIndex + 1);
+      }
+
+      const serializedLayers = layers.map(l => ({
+        id: l.id,
+        name: l.name,
+        type: l.type,
+        dataURL: l.canvas.toDataURL(),
+        x: l.x,
+        y: l.y,
+        scale: l.scale,
+        rotation: l.rotation,
+        opacity: l.opacity,
+        blendMode: l.blendMode,
+        visible: l.visible,
+        locked: l.locked,
+        shadow: l.shadow,
+        shadowColor: l.shadowColor,
+        shadowBlur: l.shadowBlur,
+        shadowOffsetY: l.shadowOffsetY
+      }));
+
+      historyStack.push({
+        label: actionLabel,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        docWidth,
+        docHeight,
+        activeLayerId,
+        layers: serializedLayers
+      });
+
+      if (historyStack.length > MAX_HISTORY) {
+        historyStack.shift();
+      }
+      historyIndex = historyStack.length - 1;
+      renderHistoryUI();
+    }
+
+    function restoreHistoryStep(idx) {
+      if (idx < 0 || idx >= historyStack.length) return;
+      historyIndex = idx;
+      const snap = historyStack[idx];
+
+      docWidth = snap.docWidth;
+      docHeight = snap.docHeight;
+      displayCanvas.width = docWidth;
+      displayCanvas.height = docHeight;
+      overlayCanvas.width = docWidth;
+      overlayCanvas.height = docHeight;
+
+      let loadedCount = 0;
+      const restoredLayers = snap.layers.map(sl => {
+        const nl = createLayerObject(sl.name, sl.type, docWidth, docHeight);
+        nl.id = sl.id;
+        nl.x = sl.x;
+        nl.y = sl.y;
+        nl.scale = sl.scale;
+        nl.rotation = sl.rotation;
+        nl.opacity = sl.opacity;
+        nl.blendMode = sl.blendMode;
+        nl.visible = sl.visible;
+        nl.locked = sl.locked;
+        nl.shadow = sl.shadow;
+        nl.shadowColor = sl.shadowColor;
+        nl.shadowBlur = sl.shadowBlur;
+        nl.shadowOffsetY = sl.shadowOffsetY;
+
+        const img = new Image();
+        img.onload = () => {
+          nl.ctx.drawImage(img, 0, 0);
+          loadedCount++;
+          if (loadedCount === snap.layers.length) {
+            renderComposite();
+            renderLayerListUI();
+          }
+        };
+        img.src = sl.dataURL;
+        return nl;
+      });
+
+      layers = restoredLayers;
+      activeLayerId = snap.activeLayerId;
+      renderHistoryUI();
+    }
+
+    function undo() {
+      if (historyIndex > 0) {
+        restoreHistoryStep(historyIndex - 1);
+        showToast(`Undo: ${historyStack[historyIndex].label}`);
+      } else {
+        showToast('Nothing more to undo');
+      }
+    }
+
+    function redo() {
+      if (historyIndex < historyStack.length - 1) {
+        restoreHistoryStep(historyIndex + 1);
+        showToast(`Redo: ${historyStack[historyIndex].label}`);
+      } else {
+        showToast('Nothing to redo');
+      }
+    }
+
+    function renderHistoryUI() {
+      const container = document.getElementById('historyListContainer');
+      document.getElementById('historyCountLabel').innerText = `${historyStack.length} steps`;
+      container.innerHTML = '';
+
+      historyStack.forEach((step, idx) => {
+        const btn = document.createElement('button');
+        const isCurrent = idx === historyIndex;
+        btn.className = `w-full text-left px-3 py-1.5 rounded-lg text-xs flex items-center justify-between smooth-ui ${
+          isCurrent ? 'bg-brand-600 text-white font-semibold shadow-2xs' : 'hover:bg-slate-200/70 text-slate-600'
+        }`;
+        btn.innerHTML = `
+          <span class="truncate">${idx + 1}. ${step.label}</span>
+          <span class="text-[10px] ${isCurrent ? 'text-brand-100' : 'text-slate-400'}">${step.time}</span>
+        `;
+        btn.onclick = () => restoreHistoryStep(idx);
+        container.appendChild(btn);
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ------------------- TEMPLATES & NDOCS-STYLE HUB -------------------
+    function toggleHomeModal(show) {
+      const modal = document.getElementById('homeTemplatesModal');
+      if (show) {
+        document.getElementById('hubActiveDocTitle').innerText = document.getElementById('projectTitleInput').value;
+        document.getElementById('hubActiveDocSub').innerText = `${layers.length} Layers • ${docWidth} × ${docHeight} px`;
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function filterTemplateCards() {
+      const q = document.getElementById('templateSearchInput').value.toLowerCase();
+      document.querySelectorAll('.template-card').forEach(card => {
+        const keywords = card.getAttribute('data-name') || '';
+        card.classList.toggle('hidden', !keywords.includes(q));
+      });
+    }
+
+    function createTemplateProject(preset, skipModalClose = false) {
+      layers = [];
+      layerCounter = 1;
+      historyStack.length = 0;
+      historyIndex = -1;
+
+      if (preset === 'youtube') {
+        setupDocumentDimensions(1280, 720, 'YouTube Thumbnail Design');
+        // Layer 1: Vibrant Gradient Background
+        const bg = createLayerObject('Gradient Backdrop', 'background');
+        const g = bg.ctx.createLinearGradient(0, 0, 1280, 720);
+        g.addColorStop(0, '#0f172a');
+        g.addColorStop(0.55, '#1e3a8a');
+        g.addColorStop(1, '#2563eb');
+        bg.ctx.fillStyle = g;
+        bg.ctx.fillRect(0, 0, 1280, 720);
+        layers.push(bg);
+
+        // Layer 2: Decorative Vector Shapes
+        const vec = createLayerObject('Vector Art Shapes', 'vector');
+        vec.shadow = true;
+        vec.ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        vec.ctx.beginPath();
+        vec.ctx.arc(1050, 360, 260, 0, Math.PI * 2);
+        vec.ctx.fill();
+
+        // Modern Blue Card
+        vec.ctx.fillStyle = '#ffffff';
+        vec.ctx.beginPath();
+        vec.ctx.roundRect ? vec.ctx.roundRect(90, 120, 740, 480, 28) : vec.ctx.rect(90, 120, 740, 480);
+        vec.ctx.fill();
+
+        // Blue Badge inside card
+        vec.ctx.fillStyle = '#2563eb';
+        vec.ctx.beginPath();
+        vec.ctx.roundRect ? vec.ctx.roundRect(140, 175, 210, 44, 99) : vec.ctx.rect(140, 175, 210, 44);
+        vec.ctx.fill();
+        vec.ctx.fillStyle = '#ffffff';
+        vec.ctx.font = 'bold 18px Inter, sans-serif';
+        vec.ctx.fillText('✦ NDESIGN STUDIO', 165, 203);
+        layers.push(vec);
+
+        // Layer 3: Editable Headline Text Layer
+        const txt = createLayerObject('Headline Typography', 'text');
+        txt.ctx.fillStyle = '#0f172a';
+        txt.ctx.font = '800 64px Inter, sans-serif';
+        txt.ctx.fillText('Photo & Vector', 140, 310);
+        txt.ctx.fillStyle = '#2563eb';
+        txt.ctx.fillText('Pro Design App', 140, 390);
+        txt.ctx.fillStyle = '#64748b';
+        txt.ctx.font = '500 22px Inter, sans-serif';
+        txt.ctx.fillText('Multi-layer editing • Vector Pen • Magic Cutout • FX', 140, 465);
+        layers.push(txt);
+        activeLayerId = txt.id;
+
+      } else if (preset === 'instagram') {
+        setupDocumentDimensions(1080, 1080, 'Instagram Square Post');
+        const bg = createLayerObject('Pastel Canvas', 'background');
+        const g = bg.ctx.createLinearGradient(0, 0, 1080, 1080);
+        g.addColorStop(0, '#eff6ff');
+        g.addColorStop(1, '#dbeafe');
+        bg.ctx.fillStyle = g;
+        bg.ctx.fillRect(0, 0, 1080, 1080);
+        layers.push(bg);
+
+        const card = createLayerObject('Center Badge', 'vector');
+        card.shadow = true;
+        card.ctx.fillStyle = '#2563eb';
+        card.ctx.beginPath();
+        card.ctx.arc(540, 540, 320, 0, Math.PI * 2);
+        card.ctx.fill();
+        card.ctx.fillStyle = '#ffffff';
+        card.ctx.font = '800 68px Inter, sans-serif';
+        card.ctx.textAlign = 'center';
+        card.ctx.fillText('NDESIGN', 540, 530);
+        card.ctx.font = '500 28px Inter, sans-serif';
+        card.ctx.fillText('CREATIVE STUDIO', 540, 595);
+        layers.push(card);
+        activeLayerId = card.id;
+
+      } else if (preset === 'logo') {
+        setupDocumentDimensions(1000, 1000, 'Vector Logo Artboard');
+        const bg = createLayerObject('White Artboard', 'background');
+        bg.ctx.fillStyle = '#ffffff';
+        bg.ctx.fillRect(0, 0, 1000, 1000);
+        layers.push(bg);
+
+        const sym = createLayerObject('Geometric Emblem', 'vector');
+        sym.shadow = true;
+        sym.ctx.strokeStyle = '#2563eb';
+        sym.ctx.lineWidth = 16;
+        sym.ctx.beginPath();
+        sym.ctx.arc(500, 460, 200, 0, Math.PI * 2);
+        sym.ctx.stroke();
+        sym.ctx.fillStyle = '#2563eb';
+        sym.ctx.font = '800 54px Montserrat, sans-serif';
+        sym.ctx.textAlign = 'center';
+        sym.ctx.fillText('N•STUDIO', 500, 760);
+        layers.push(sym);
+        activeLayerId = sym.id;
+
+      } else if (preset === 'poster') {
+        setupDocumentDimensions(900, 1200, 'Event Poster');
+        const bg = createLayerObject('Poster Background', 'background');
+        bg.ctx.fillStyle = '#0f172a';
+        bg.ctx.fillRect(0, 0, 900, 1200);
+        bg.ctx.fillStyle = '#2563eb';
+        bg.ctx.fillRect(60, 60, 780, 1080);
+        layers.push(bg);
+        const paint = createLayerObject('Artwork Layer', 'paint');
+        layers.push(paint);
+        activeLayerId = paint.id;
+
+      } else if (preset === 'banner') {
+        setupDocumentDimensions(1400, 560, 'Web Header Banner');
+        const bg = createLayerObject('Banner Base', 'background');
+        bg.ctx.fillStyle = '#ffffff';
+        bg.ctx.fillRect(0, 0, 1400, 560);
+        layers.push(bg);
+        activeLayerId = bg.id;
+
+      } else {
+        // Blank Clean Canvas
+        setupDocumentDimensions(1080, 720, 'Untitled design');
+        const bg = createLayerObject('Background', 'background');
+        bg.ctx.fillStyle = '#ffffff';
+        bg.ctx.fillRect(0, 0, 1080, 720);
+        layers.push(bg);
+        const paint = createLayerObject('Layer 1', 'paint');
+        layers.push(paint);
+        activeLayerId = paint.id;
+      }
+
+      renderComposite();
+      renderLayerListUI();
+      fitCanvasToScreen();
+      recordHistory(`Opened ${preset.toUpperCase()} Canvas`);
+      if (!skipModalClose) toggleHomeModal(false);
+    }
+
+    function setupDocumentDimensions(w, h, title) {
+      docWidth = w;
+      docHeight = h;
+      displayCanvas.width = w;
+      displayCanvas.height = h;
+      overlayCanvas.width = w;
+      overlayCanvas.height = h;
+      document.getElementById('topDimBadge').innerText = `${w} × ${h} px`;
+      document.getElementById('cropWidthInput').value = w;
+      document.getElementById('cropHeightInput').value = h;
+      if (title) document.getElementById('projectTitleInput').value = title;
+    }
+
+    function applyCanvasResize() {
+      const nw = Math.max(100, Math.min(4000, parseInt(document.getElementById('cropWidthInput').value) || 1080));
+      const nh = Math.max(100, Math.min(4000, parseInt(document.getElementById('cropHeightInput').value) || 720));
+
+      layers.forEach(l => {
+        const temp = document.createElement('canvas');
+        temp.width = docWidth;
+        temp.height = docHeight;
+        temp.getContext('2d').drawImage(l.canvas, 0, 0);
+        l.canvas.width = nw;
+        l.canvas.height = nh;
+        l.ctx.drawImage(temp, 0, 0);
+      });
+
+      setupDocumentDimensions(nw, nh);
+      renderComposite();
+      renderLayerListUI();
+      fitCanvasToScreen();
+      recordHistory(`Resized Canvas (${nw}×${nh})`);
+      showToast(`Canvas resized to ${nw} × ${nh} px`);
+    }
+
+    // ------------------- IMAGE UPLOAD & PROJECT BACKUP (.NDESIGN JSON) -------------------
+    function handleImageUpload(e, asNewLayer = true) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          if (!asNewLayer) {
+            setupDocumentDimensions(img.width, img.height, file.name.replace(/\.[^/.]+$/, ''));
+            layers = [];
+          }
+          const imgLayer = createLayerObject(file.name.substring(0, 18), 'image', docWidth, docHeight);
+          // Scale image to fit nicely if larger than canvas
+          const ratio = Math.min(docWidth / img.width, docHeight / img.height, 1);
+          const drawW = img.width * ratio;
+          const drawH = img.height * ratio;
+          const ox = (docWidth - drawW) / 2;
+          const oy = (docHeight - drawH) / 2;
+          imgLayer.ctx.drawImage(img, ox, oy, drawW, drawH);
+
+          layers.push(imgLayer);
+          activeLayerId = imgLayer.id;
+          renderComposite();
+          renderLayerListUI();
+          recordHistory(`Imported ${file.name}`);
+          showToast('Photo imported onto new layer');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    function handleHubImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.name.endsWith('.ndesign') || file.name.endsWith('.json')) {
+        loadProjectJSON(e);
+      } else {
+        handleImageUpload(e, false);
+      }
+      toggleHomeModal(false);
+    }
+
+    function saveProjectJSON() {
+      const payload = {
+        app: 'Ndesign',
+        version: '2.0',
+        title: document.getElementById('projectTitleInput').value,
+        docWidth,
+        docHeight,
+        globalGrade,
+        layers: layers.map(l => ({
+          name: l.name,
+          type: l.type,
+          x: l.x,
+          y: l.y,
+          scale: l.scale,
+          rotation: l.rotation,
+          opacity: l.opacity,
+          blendMode: l.blendMode,
+          visible: l.visible,
+          shadow: l.shadow,
+          shadowColor: l.shadowColor,
+          shadowBlur: l.shadowBlur,
+          shadowOffsetY: l.shadowOffsetY,
+          dataURL: l.canvas.toDataURL()
+        }))
+      };
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${payload.title.toLowerCase().replace(/\s+/g, '-')}.ndesign`;
+      a.click();
+      showToast('Project backup (.ndesign) downloaded');
+    }
+
+    function loadProjectJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          setupDocumentDimensions(data.docWidth || 1080, data.docHeight || 720, data.title || 'Loaded Project');
+          layers = [];
+          let loaded = 0;
+          data.layers.forEach(sl => {
+            const nl = createLayerObject(sl.name, sl.type, docWidth, docHeight);
+            Object.assign(nl, {
+              x: sl.x || 0, y: sl.y || 0, scale: sl.scale || 1, rotation: sl.rotation || 0,
+              opacity: sl.opacity ?? 100, blendMode: sl.blendMode || 'source-over',
+              visible: sl.visible ?? true, shadow: sl.shadow || false
+            });
+            const img = new Image();
+            img.onload = () => {
+              nl.ctx.drawImage(img, 0, 0);
+              loaded++;
+              if (loaded === data.layers.length) {
+                activeLayerId = layers[layers.length - 1].id;
+                renderComposite();
+                renderLayerListUI();
+                recordHistory('Loaded .ndesign Backup');
+                showToast('Project backup restored!');
+              }
+            };
+            img.src = sl.dataURL;
+            layers.push(nl);
+          });
+        } catch (err) {
+          showToast('Invalid .ndesign project file');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ------------------- EXPORT HIGH-RES IMAGE -------------------
+    function exportCanvas(format = 'png') {
+      renderComposite();
+      const mime = format === 'jpeg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
+      const ext = format === 'jpeg' ? 'jpg' : format;
+      const title = (document.getElementById('projectTitleInput').value || 'ndesign-art').toLowerCase().replace(/\s+/g, '-');
+
+      const link = document.createElement('a');
+      link.download = `${title}.${ext}`;
+      link.href = displayCanvas.toDataURL(mime, 0.95);
+      link.click();
+      showToast(`Exported ${title}.${ext.toUpperCase()}`);
+    }
+
+    // ------------------- VIEWPORT ZOOM, PAN, GRID & RULERS -------------------
+    function applyViewportTransform() {
+      canvasStage.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+      document.getElementById('zoomDisplay').innerText = `${Math.round(zoomLevel * 100)}%`;
+    }
+
+    function setZoom(val) {
+      zoomLevel = Math.max(0.15, Math.min(4.0, val));
+      applyViewportTransform();
+    }
+
+    function resetPan() {
+      panX = 0;
+      panY = 0;
+      applyViewportTransform();
+    }
+
+    function fitCanvasToScreen() {
+      const rect = viewportContainer.getBoundingClientRect();
+      const availW = rect.width - 80;
+      const availH = rect.height - 80;
+      zoomLevel = Math.min(availW / docWidth, availH / docHeight, 1.0);
+      zoomLevel = Math.max(0.2, zoomLevel);
+      panX = 0;
+      panY = 0;
+      applyViewportTransform();
+    }
+
+    viewportContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      setZoom(zoomLevel + delta);
+    }, { passive: false });
+
+    function toggleGrid() {
+      showGrid = !showGrid;
+      document.getElementById('gridCheckmark').innerText = showGrid ? '✓' : '';
+      renderOverlayCanvas();
+    }
+
+    function toggleRulers() {
+      showRulers = !showRulers;
+      document.getElementById('topRuler').classList.toggle('hidden', !showRulers);
+      document.getElementById('leftRuler').classList.toggle('hidden', !showRulers);
+      document.getElementById('cornerRuler').classList.toggle('hidden', !showRulers);
+      document.getElementById('rulerCheckmark').innerText = showRulers ? '✓' : '';
+    }
+
+    // ------------------- RIGHT DOCK TAB SWITCHER -------------------
+    function switchRightTab(tab) {
+      ['layers', 'adjust', 'history'].forEach(t => {
+        const panel = document.getElementById(`tabPanel-${t}`);
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (t === tab) {
+          panel.classList.remove('hidden');
+          panel.classList.add('flex');
+          btn.classList.add('bg-white', 'text-brand-600', 'shadow-2xs', 'border', 'border-slate-200/80');
+          btn.classList.remove('text-slate-600');
+        } else {
+          panel.classList.add('hidden');
+          panel.classList.remove('flex');
+          btn.classList.remove('bg-white', 'text-brand-600', 'shadow-2xs', 'border', 'border-slate-200/80');
+          btn.classList.add('text-slate-600');
+        }
+      });
+    }
+
+    // ------------------- KEYBOARD SHORTCUTS -------------------
+    function setupKeyboardShortcuts() {
+      // Contextual slider listeners
+      document.getElementById('brushSizeInput').addEventListener('input', e => {
+        document.getElementById('brushSizeLabel').innerText = `${e.target.value}px`;
+      });
+      document.getElementById('brushOpacityInput').addEventListener('input', e => {
+        document.getElementById('brushOpacityLabel').innerText = `${e.target.value}%`;
+      });
+      document.getElementById('magicToleranceInput').addEventListener('input', e => {
+        document.getElementById('magicToleranceLabel').innerText = e.target.value;
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+        if (e.code === 'Space') {
+          isSpaceDown = true;
+          displayCanvas.style.cursor = 'grab';
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          undo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+          e.preventDefault();
+          redo();
+        } else {
+          const k = e.key.toLowerCase();
+          if (k === 'v') setTool('move');
+          else if (k === 'c') setTool('crop');
+          else if (k === 'w') setTool('magic');
+          else if (k === 'b') setTool('brush');
+          else if (k === 'e') setTool('eraser');
+          else if (k === 'j') setTool('retouch');
+          else if (k === 'p') setTool('pen');
+          else if (k === 'u') setTool('shape');
+          else if (k === 'g') setTool('gradient');
+          else if (k === 't') setTool('text');
+          else if (k === 'i') setTool('eyedropper');
+          else if (k === 'h') setTool('hand');
+          else if (k === 'x') swapColors();
+          else if (k === 'enter' && currentTool === 'pen') finishVectorPenPath(true);
+          else if (k === 'escape' && currentTool === 'pen') clearVectorPenPoints();
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          isSpaceDown = false;
+          setTool(currentTool);
+        }
+      });
+    }
+
+    // ------------------- TOAST NOTIFICATION -------------------
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').innerText = msg;
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+  </script>
+</body>
+</html>
